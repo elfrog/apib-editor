@@ -1,0 +1,36 @@
+{
+  "name": "apib-editor",
+  "version": "1.0.0",
+  "description": "simple api-blueprint editor.",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "mocha --compilers js:babel-core/register",
+    "dev": "webpack-dev-server --progress --inline --hot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elfrog/apib-editor.git"
+  },
+  "keywords": [
+    "api-blueprint",
+    "api",
+    "editor"
+  ],
+  "author": "Baek Jonghyeon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/elfrog/apib-editor/issues"
+  },
+  "homepage": "https://github.com/elfrog/apib-editor#readme",
+  "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.4.0",
+    "mocha": "^3.4.1",
+    "webpack": "^2.5.1",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.23.0"
+  }
+}
