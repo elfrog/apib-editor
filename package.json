@@ -4,7 +4,7 @@
   "description": "simple api-blueprint editor.",
   "main": "dist/app.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register",
+    "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
     "build": "babel src -d build",
     "start": "npm run build && node build/index.js"
   },
@@ -24,10 +24,12 @@
   },
   "homepage": "https://github.com/elfrog/apib-editor#readme",
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
-    "babel-loader": "^7.0.0",
     "babel-preset-env": "^1.4.0",
     "mocha": "^3.4.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "babel-polyfill": "^6.23.0"
+  }
 }
