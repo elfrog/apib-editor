@@ -1,11 +1,31 @@
-import 'babel-polyfill';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import './styles/main.less';
+import apiData from 'raw-loader!./api-data.apib';
 
 import ApiBlueprintParser from './parser/api-blueprint-parser';
 
-const TEST_FILE_PATH = 'c:/projects/API 명세/index.apib';
-
 let parser = new ApiBlueprintParser();
 
-parser.parseFromFile(TEST_FILE_PATH).then(root => {
-  console.log(root);
+function renderNode(node) {
+  let elem = <div className='apib-node'>
+    <div className='apib-node-header'>{node.header}</div>
+    {node.children.length > 0 &&
+      <ul className='apib-node-children'>
+        {node.children.map(child => {
+          return <li key={child.id} className='apib-node-child'>{renderNode(child)}</li>;
+        })}
+      </ul>
+    }
+  </div>;
+
+  return elem;
+}
+
+parser.parse(apiData).then(root => {
+  ReactDOM.render(
+    <div className='apib-node-panel'>{renderNode(root)}</div>,
+    document.getElementById('app')
+  );
 });
