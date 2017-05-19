@@ -1,0 +1,8046 @@
+ORMAT: 1A
+HOST: https://thinkmath.co.kr/api
+
+# THINKMATH API
+
+Thinkmath API는 씽크매스 서비스를 제공하는 API이다. 이 API에 접근하는 베이스
+URL의 구조는 아래와 같다.
+
+> https://thinkmath.com/api/{apiVersion}
+
+apiVersion은 API의 버전이며, 특별히 수정되거나 하지 않는 이상 v1의 값을 가진다.
+또 apiVersion은 생략할 수 있으며 그럴 경우 버전은 항상 v1이라고 간주한다.
+
+# Data Structures
+
+## CommonError (object)
+- status: 500 (number) - 상태 코드
+- code: 1001 (number) - 에러 코드
+- message: 에러가 발생했습니다. (string) - 에러 메시지
+
+## BadRequestError (CommonError)
+- status: 400
+- code: 1003
+- message: 요청한 데이터가 올바르지 않습니다.
+- fields (array)
+    - (object)
+        - field: field (string) - 필드 이름
+        - message: 필수 입력입니다. (string) - 실패한 이유
+
+## UnauthorizedError (CommonError)
+- status: 401
+- code: 2001
+- message: 인증에 실패하였습니다.
+
+## ForbiddenError (CommonError)
+- status: 403
+- code: 2002
+- message: 권한이 없습니다.
+
+## NoResourceError (CommonError)
+- status: 404
+- code: 1002
+- message: 요청한 리소스가 존재하지 않습니다.
+- resource (optional, object) - 존재하지 않는 리소스 정보
+    - id: 17 (optional, number) - 요청 리소스ID
+    - name: `resourceName` (optional, string) - 요청 리소스 이름
+    - type: File (string) - 요청 리소스 타입
+
+## ConflictError (CommonError)
+- status: 409
+- resource (optional, object) - 충돌이 일어난 리소스 정보
+    - id: 17 (number) - 요청 리소스ID
+    - type: File (string) - 요청 리소스 타입
+
+## InternalServerError (CommonError)
+- status: 500
+
+# Group 사용자 인증
+
+## 인증 토큰 발급 [POST /auth/token]
+
+인증이 필요한 API에 접근하기 위해 인증 토큰을 발급한다.
+
++ Request (application/x-www-form-urlencoded)
+    + Body
+
+            username=admin&password=1234
+
++ Response 201
+
+    토큰 발급에 성공함.
+
+    + Body
+
+            AUTH_TOKEN
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+## 인증 토큰 검증 [GET /auth/validate]
+
+발급된 인증 토큰이 만료되지 않고 정상적인 토큰인지 검사한다.
+
+정상적인 토큰인 경우엔 `204` 상태 코드를 반환한다.
+
++ Request
+    + Headers
+
+            X-Auth-Token: 인증 토큰
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+# Group 계정 시스템
+
+## 회원 [/members/{id}]
+
++ Parameters
+    + id (number) - 회원 번호
+
+### 회원 조회 [GET]
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (MemberInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 회원 수정 [PUT]
+
+회원 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (MemberUpdate)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 회원 삭제 [DELETE]
+
+회원을 삭제한다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 회원 생성 [POST /members]
+
+회원을 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (MemberCreate)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (MemberInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 409 (application/json)
+
+    같은 아이디의 회원이 이미 존재하면 `2003` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 회원 콜렉션 [GET /members{?page,size,username,nickname}]
+
+회원의 목록을 조회한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + username: admin (optional, string) - 필터링할 회원 아이디.
+    + nickname: 관리자 (optional, string) - 필터링할 회원 별명.
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[MemberInfo])
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 회원 프로필 [/members/{id}/profile]
+
+회원의 상세 프로필 정보.
+
++ Parameters
+    + id (number) - 회원 번호
+
+### 프로필 조회 [GET]
+
+관리자가 아니면 접속한 회원 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (MemberProfile)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 프로필 수정 [PUT]
+
+관리자가 아니면 접속한 회원 본인의 것만 수정이 가능하다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (MemberProfile)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## MemberInfo (object)
+- id: 2 (number) - 회원 번호
+- username: admin (string) - 회원 아이디
+- nickname: 관리자 (string) - 회원 별명
+- email: admin@thinkmath.co.kr (string) - 회원 이메일
+- loginDate: `2016-12-31T12:00:00Z` (string) - 최종 로그인 날짜
+- createDate: `2016-12-31T12:00:00Z` (string) - 회원 생성일
+- roles (array) - 역할
+    - (enum)
+        - USER
+        - ADMIN
+        - SITE_MANAGER
+        - LMS_MANAGER
+        - DESIGN_MANAGER
+        - INSTRUCTOR
+
+## MemberCreate (object)
+- username: admin (string) - 회원 아이디
+- password: 1234 (string) - 비밀번호
+- nickname: 관리자 (string) - 회원 이름
+- email: admin@thinkmath.co.kr (string) - 회원 이메일
+- roles (array) - 역할
+    - (enum)
+        - USER
+        - ADMIN
+        - SITE_MANAGER
+        - LMS_MANAGER
+        - DESIGN_MANAGER
+        - INSTRUCTOR
+
+## MemberUpdate (object)
+- password: 1234 (optional, string) - 비밀번호
+- nickname: 관리자 (string) - 회원 이름
+- email: admin@thinkmath.co.kr (string) - 회원 이메일
+- roles (array) - 역할
+    - (enum)
+        - USER
+        - ADMIN
+        - SITE_MANAGER
+        - LMS_MANAGER
+        - DESIGN_MANAGER
+        - INSTRUCTOR
+
+## MemberSummary (object)
+- id: 17 (number) - 회원 번호
+- username: admin (string) - 회원 아이디
+- nickname: 관리자 (string) - 회원 별명
+- email: `test@thinkmath.co.kr` - 이메일
+
+## Address (object)
+- doro: `서울특별시 마포구 백범로4길 5 (노고산동)` (string) - 도로명 주소
+- jibun: `서울특별시 마포구 노고산동 107-46` (string) - 지번 주소
+- addressDetail: `3층 (주)아이와` (string) - 상세 주소
+- postalCode: 04109 (string) - 우편번호
+
+## School (object)
+- address: `서울 마포구 도화2동` (string) - 주소
+- name: 서울마포초등학교 (string) - 학교명
+
+## MemberProfile (object)
+- name: 이더기 (string) - 회원 이름
+- gender: Male (string) - 성별
+- birthDate: `2015-08-01` (string) - 생년월일
+- address (Address) - 주소
+- phoneNumber: `02-100-0100` (string) - 전화번호
+- mobileNumber: `010-0100-0100` (string) - 핸드폰 번호
+
+# Group 파일 시스템
+
+## 스토리지 [/storages/{storageId}]
+
+파일을 저장하기 위한 스토리지 정보.
+
++ Parameters
+    + storageId (number) - 스토리지ID
+
+### 스토리지 조회 [GET]
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (StorageInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 스토리지 수정 [PUT]
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (StorageBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    같은 이름의 스토리지가 이미 존재하면 `3002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 스토리지 삭제 [DELETE]
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    스토리지에 파일이 남아 있는 경우 `3001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 스토리지 생성 [POST /storages]
+
+스토리지를 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (StorageBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (StorageInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 409 (application/json)
+
+    같은 이름의 스토리지가 이미 존재하면 `3002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 스토리지 콜렉션 [GET /storages{?page,size}]
+
+스토리지 목록을 조회한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[StorageInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 파일 [/files/{fileId}]
+
+스토리지에 저장되는 파일 정보.
+
++ Parameters
+    + fileId (number) - 파일ID
+
+### 파일 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (FileInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 파일 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    스토리지 접근제한이 `PERMIT_ALL`이 아니라면 `3009` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    파일과 연결된 엔티티가 존재하면 `3007` 에러를 반환한다.
+
+    파일이 잠겨있다면 `3008` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 파일 태그 수정 [PUT /files/{fileId}/tags]
+
+업로드한 파일의 태그를 수정한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + fileId (number) - 파일ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (array)
+        - 태그1
+        - 태그2
+        - 태그3
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    스토리지 접근제한이 `READ_ONLY`라면 `3010` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    파일이 잠겨있다면 `3008` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 파일 섬네일 주소 [GET /files/{fileId}/thumbnail.png]
+
+업로드한 파일의 섬네일을 조회한다.
+
+섬네일은 무조건 PNG 파일 포맷으로 받음.
+
+일반 이미지 파일 주소로 활용되므로 특별히 조회 권한을 두지 않음.
+
++ Parameters
+    + fileId (number) - 파일ID
+
++ Response 200
+    + Headers
+
+            Content-Type: image/png
+
+    + Body
+
+            BINARY_IMAGE_DATA
+
++ Response 404
+
+### 파일 재업로드 [PUT]
+
+파일을 다시 업로드한다. 섬네일은 선택이다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (multipart/form-data; boundary=BOUNDARY)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Body
+
+            --BOUNDARY
+            Content-Disposition: form-data; name="thumbnail"
+            Content-Type: image/png
+
+            THUMBNAIL_DATA
+            --BOUNDARY
+            Content-Disposition: form-data; name="file"; filename="FILE_NAME"
+            Content-Type: image/png
+
+            FILE_DATA
+            --BOUNDARY--
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    스토리지 접근제한이 `READ_ONLY`라면 `3010` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    섬네일의 포맷이 PNG가 아니라면 `3003` 에러를 반환한다.
+
+    기존 파일과 같은 형식의 파일이 아니면 `3006` 에러를 반환한다.
+
+    파일이 잠겨있다면 `3008` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 파일 업로드 [POST /storages/{storageName}/files]
+
+파일을 업로드한다.
+
+섬네일은 선택적으로 업로드할 수 있고, 섬네일이 없으면 이미지나 동영상의 경우 자동으로 섬네일이 생성된다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + storageName: resource (string) - 스토리지 이름
+
++ Request (multipart/form-data; boundary=BOUNDARY)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Body
+
+            --BOUNDARY
+            Content-Disposition: form-data; name="thumbnail"
+            Content-Type: image/png
+
+            THUMBNAIL_DATA
+            --BOUNDARY
+            Content-Disposition: form-data; name="file"; filename="FILE_NAME"
+            Content-Type: image/png
+
+            FILE_DATA
+            --BOUNDARY--
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (FileInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    섬네일의 포맷이 PNG가 아니라면 `3003` 에러를 반환한다.
+
+    파일의 형식이 스토리지의 마임타입과 일치하지 않으면 `3011` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 파일 콜렉션 [GET /storages/{storageName}/files{?page,size,tag}]
+
+해당 스토리지에 있는 파일의 목록을 조회한다.
+
+tag로 태그를 지정하면 특정 태그를 가진 파일을 필터링한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + storageName: resource (string) - 스토리지 이름
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + tag: 태그 (optional, string) - 필터링할 태그명.
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[FileInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 파일 히스토리 [/file-histories/{fileHistoryId}]
+
+파일 수정 정보.
+
++ Parameters
+    + fileHistoryId (number) - 파일 히스토리ID
+
+### 파일 히스토리 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (FileHistoryInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 파일 히스토리 복원 [PUT /files/{fileId}/file-histories/{fileHistoryId}]
+
+파일 히스토리를 지정하여 파일 정보를 복원한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + fileId (number) - 파일ID
+    + fileHistoryId (number) - 파일 히스토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    스토리지 접근제한이 `READ_ONLY`라면 `3010` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    파일이 잠겨있다면 `3008` 에러를 반환한다.
+    파일과 연결된 파일 히스토리가 아니라면 `3012` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 파일 히스토리 섬네일 주소 [GET /file-histories/{fileHistoryId}/thumbnail.png]
+
+파일 히스토리의 섬네일을 조회한다.
+
++ Parameters
+    + fileHistoryId (number) - 파일 히스토리ID
+
++ Response 200
+    + Headers
+
+            Content-Type: image/png
+
+    + Body
+
+            BINARY_IMAGE_DATA
+
++ Response 404
+
+### 파일 히스토리 콜렉션 [GET /files/{fileId}/file-histories]
+
+파일 히스토리 목록을 조회한다.
+
+어차피 파일 히스토리 개수 제한 때문에 페이지네이션의 의미가 없으므로 목록을 전부 반환한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + fileId (number) - 파일ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[FileHistoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## StorageAccessType (enum)
+- PERMIT_ALL
+- MODIFIABLE
+- READ_ONLY
+
+## StorageInfo (object)
+- id: 17 (number) - 스토리지ID
+- name: resource (string) - 스토리지 이름
+- details: 내부적으로 사용할 리소스 스토리지이다. (string) - 스토리지 설명
+- mimeTypeFilter: `image\/png` (string) - 마임타입을 필터링할 정규표현식
+- accessType (StorageAccessType) - 접근제한 타입
+- createDate: `2016-12-31T12:00:00Z` (string) - 스토리지 생성일
+
+## StorageBase (object)
+- name: resource (string) - 스토리지 이름
+- details: 내부적으로 사용할 리소스 스토리지이다. (string) - 스토리지 설명
+- mimeTypeFilter: `image\/png` (string) - 마임타입을 필터링할 정규표현식
+- accessType (StorageAccessType) - 접근제한 타입
+
+## FileInfo (object)
+- id: 17 (number) - 파일ID
+- member (MemberSummary) - 파일 생성자
+- url: `http://file.thinkmath.co.kr/image.png` (string) - 파일 URL
+- mimeType: `image/png` (string) - 마임 타입
+- fileName: `image.png` (string) - 파일 이름
+- fileSize: 4096 (number) - 파일 크기 (바이트 수)
+- createDate: `2016-12-31T12:00:00Z` (string) - 파일 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 파일 수정일
+- tags (array[string]) - 파일 태그 목록
+
+## FileHistoryInfo (object)
+- id: 17 (number) - 파일 히스토리ID
+- url: `http://file.thinkmath.co.kr/image.png` (string) - 파일 URL
+- fileName: `image.png` (string) - 파일 이름
+- fileSize: 4096 (number) - 파일 크기 (바이트 수)
+- createDate: `2016-12-31T12:00:00Z` (string) - 파일 생성일
+
+# Group 커뮤니티 시스템
+
+쪽지, 게시판, 댓글 등의 커뮤니티 관련 시스템을 다룬다.
+
+## 게시판 [/boards/{boardId}]
+
+통합 게시판. 여러개의 게시판이 있을 수 있으며, 각 게시판에는 여러 게시글이 있을 수 있다.
+
++ Parameters
+    + boardId: 17 (number) - 게시판ID
+
+### 게시판 조회 [GET]
+
+게시판 정보를 조회한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (BoardInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시판 수정 [PUT]
+
+게시판 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (BoardBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시판 삭제 [DELETE]
+
+게시판을 삭제한다. 게시판에 게시글이 남아있으면 삭제할 수 없다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    게시판에 게시글이 남아있으면 `5002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 게시판 생성 [POST /boards]
+
+게시판을 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (BoardBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (BoardInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 게시판 콜렉션 [GET /boards{?page,size}]
+
+게시판 목록을 조회한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[BoardInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 게시글 [/posts/{postId}]
+
+게시판에 소속된 게시글이다.
+
++ Parameters
+    + postId (number) - 게시글ID
+
+### 게시글 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
+::: note
+## 비밀글 권한
+게시글에 비밀글이 설정되어 있으면 본인 또는 아래 권한을 가진 회원만 읽을 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (PostContentInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시글 수정 [PUT]
+
+::: note
+## 권한
+본인 외에는 아래 권한을 가진 회원만 수정할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시글 삭제 [DELETE]
+
+::: note
+## 권한
+본인 외에는 아래 권한을 가진 회원만 삭제할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
+::: warning
+게시글이 삭제되면 게시글에 속한 모든 댓글도 삭제됨.
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시글 작성 [POST /boards/{boardId}/posts]
+
+해당 게시판에 게시글을 작성한다.
+
+::: note
+## 권한
+`USER`
+:::
+
+::: note
+## 잠김 권한
+게시판의 locked 속성이 true인 경우에는 아래 권한을 가진 회원만 작성할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + boardId: 17 (number) - 게시판ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PostInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    게시글 작성수가 한계를 넘어서면 `5003` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 답변 작성 [POST /posts/{targetPostId}/reply]
+
+답변 게시글을 작성한다.
+
+::: note
+## 답글 허용
+게시판의 replyAllowed 속성이 false인 경우에는 답글을 생성할 수 없다.
+:::
+
+::: note
+## 권한
+`USER`
+:::
+
+::: note
+## 잠김 권한
+게시판의 locked 속성이 true인 경우에는 아래 권한을 가진 회원만 작성할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + targetPostId: 17 (string) - 답변할 대상 게시글ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PostInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    게시판의 답글이 허용되어 있지 않으면 `5007` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    게시글 작성수가 한계를 넘어서면 `5003` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 게시글 콜렉션 [GET /boards/{boardId}/posts{?page,size,keyword,name,categoryId}]
+
+게시판에 속한 게시글의 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + boardId: 17 (number) - 게시판ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + keyword: 학습 (optional, string) - 필터링할 키워드
+    + name: 이더기 (optional, string) - 필터링할 회원 이름
+    + categoryId: 17 (number) - 필터링할 게시글 카테고리ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[PostInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 게시글 카테고리 [/post-categories/{categoryId}]
+
+### 게시글 카테고리 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (PostCategoryInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 게시글 카테고리 삭제 [DELETE]
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    카테고리에 게시글이 남아 있는 경우 `5010` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 게시글 카테고리 생성 [POST /boards/{boardId}/post-categories]
+
+해당 게시판에 게시글 카테고리를 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + boardId: 17 (number) - 게시판ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostCategoryBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PostCategoryInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    같은 이름의 카테고리가 이미 존재하면 `5009` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 게시글 카테고리 콜렉션 [GET /boards/{boardId}/post-categories{?page,size}]
+
+게시판에 속한 게시글 카테고리의 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + boardId: 17 (number) - 게시판ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[PostCategoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 댓글 [/comments/{commentId}]
+
+게시글에 의견을 추가할 수 있는 댓글이다.
+
+게시글에 댓글이 남아있더라도 게시글이 삭제되면 모든 댓글도 삭제된다.
+
++ Parameters
+    + commentId (number) - 댓글ID
+
+### 댓글 수정 [PUT]
+
+::: note
+## 권한
+본인 외에는 아래 권한을 가진 회원만 수정할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostCommentBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 댓글 삭제 [DELETE]
+
+::: note
+## 권한
+본인 외에는 아래 권한을 가진 회원만 삭제할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 댓글 작성 [POST /posts/{postId}/comments]
+
+게시글에 댓글을 작성하여 추가한다.
+
+::: note
+## 댓글 허용
+게시판의 commentAllowed 속성이 false인 경우에는 댓글을 생성할 수 없다.
+:::
+
+::: note
+## 권한
+`USER`
+:::
+
+::: note
+## 비밀글 권한
+게시글이 비밀글인 경우에는 본인 또는 아래 권한을 가진 회원만 생성할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
+::: note
+## 잠김 권한
+게시판의 locked 속성이 true인 경우에는 아래 권한을 가진 회원만 생성할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + postId (number) - 게시글ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PostCommentBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PostCommentInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+
+    게시판에 댓글이 허용되어 있지 않으면 `5008` 에러를 반환한다.
+
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    댓글의 작성 가능수가 한계를 넘어서면 `5004` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 댓글 콜렉션 [GET /posts/{postId}/comments{?page,size}]
+
+게시글에 속한 댓글의 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
+::: note
+## 비밀글 권한
+게시글이 비밀글인 경우에는 본인 또는 아래 권한을 가진 회원만 조회할 수 있다.
+
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + postId: 17 (number) - 게시글 ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[PostCommentInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 쪽지 [/messages/{messageId}]
+
+회원간 개인적으로 주고 받을 수 있는 쪽지이다.
+
++ Parameters
+    + messageId (number) - 쪽지ID
+
+### 쪽지 조회 [GET]
+
+수신자가 쪽지를 조회하면 쪽지의 read 속성이 true 로 변하며, readDate가 NULL에서 읽은 날짜로 자동 설정된다.
+
+::: note
+## 권한
+송신자, 수신자이거나 아래의 권한을 가진 회원이 아니면 조회할 수 없다.
+
+`ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (MemberMessageInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 쪽지 삭제 [DELETE]
+
+쪽지를 DB에서 완전히 삭제함.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 쪽지 콜렉션 [GET /messages{?page,size,keyword,username,name}]
+
+전체 쪽지를 조회한다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + keyword: 학습 (optional, string) - 필터링할 키워드
+    + username: admin (optional, string) - 필터링할 회원 아이디
+    + name: 관리자 (optional, string) - 필터링할 회원 이름
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[MemberMessageInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 쪽지함 조회 [GET /members/{memberId}/messages{?page,size}]
+
+관리자가 아닌 일반 회원은 자기 자신과 관련된 쪽지만을 볼 수 있으며, 이를 쪽지함이라 한다.
+
+송신자가 쪽지 콜렉션을 조회하게 되면 status가 SENDER_DELETED, BOTH_DELETED가 아닌 쪽지만 조회하게 되고, 수신자가 조회하면 RECEIVER_DELETED, BOTH_DELETED가 아닌 쪽지를 조회한다.
+
+::: note
+## 권한
+memberId 가 접속자의 회원 번호가 아니면 아래의 권한을 가진 회원만 조회가 가능하다.
+
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 쪽지함을 조회할 회원 번호
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[MemberMessageInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 쪽지 보내기 [POST /members/{memberId}/messages]
+
+상대방에게 쪽지를 보낸다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 쪽지를 보낼 회원 번호
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (MemberMessageBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (MemberMessageInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    자기 자신에게 쪽지를 보내는 경우 `5006` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 쪽지함에서 쪽지 삭제 [DELETE /members/{memberId}/messages/{messageId}]
+
+쪽지함에서 쪽지를 삭제함.
+
+완전히 삭제되는 것이 아니라 자신의 쪽지함에만 안보이는 것이며, 쪽지의 status 속성이 NONE에서 송신자의 경우에는 SENDER_DELETED로, 수신자의 경우에는 RECEIVER_DELETED로 변하며 둘 중 하나가 이미 설정되어 있다면 BOTH_DELETED로 변한다.
+
+::: note
+## 권한
+송신자, 수신자인 회원만이 쪽지를 쪽지함에서 삭제할 수 있다.
+
+`USER`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 쪽지함을 소유한 회원 번호
+    + messageId: 23 (number) - 삭제할 쪽지ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    이미 삭제한 쪽지를 삭제하는 경우 `5006` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+# Data Structures
+
+## BoardInfo (object)
+- id: 17 (number) - 게시판ID
+- title: 질문과 답변 (string) - 게시판 제목
+- locked: false (boolean) - 잠김 여부
+- commentAllowed: true (boolean) - 댓글 허용 여부
+- replyAllowed: true (boolean) - 답글 허용 여부
+- createDate: `2016-12-31T12:00:00Z` (string) - 게시판 생성일
+
+## BoardBase (object)
+- title: 질문과 답변 (string) - 게시판 제목
+- locked: false (boolean) - 잠김 여부
+- commentAllowed: true (boolean) - 댓글 허용 여부
+- replyAllowed: true (boolean) - 답글 허용 여부
+
+## PostInfo (object)
+- id: 17 (number) - 게시글ID
+- boardId: 19 (number) - 소속 게시판ID
+- author (MemberSummary) - 게시글 작성자
+- category: 학습 (string) - 카테고리 이름
+- title: 학습을 어떻게 시작하나요? (string) - 게시글 제목
+- secret: false (boolean) - 비밀글 여부
+- depth: 0 (number) - 답변 깊이
+- readCount: 17 (number) - 읽은 수
+- commentCount: 3 (number) - 댓글 수
+- createDate: `2016-12-31T12:00:00Z` (string) - 게시글 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 게시글 수정일
+
+## PostContentInfo (object)
+- id: 17 (number) - 게시글ID
+- boardId: 19 (number) - 소속 게시판ID
+- author (MemberSummary) - 게시글 작성자
+- category: 학습 (string) - 카테고리 이름
+- title: 학습을 어떻게 시작하나요? (string) - 게시글 제목
+- content: 학습을 어떻게 시작하면 좋을까요? 알려주세요. (string) - 내용
+- secret: false (boolean) - 비밀글 여부
+- readCount: 17 (number) - 읽은 수
+- createDate: `2016-12-31T12:00:00Z` (string) - 게시글 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 게시글 수정일
+
+## PostBase (object)
+- title: 학습을 어떻게 시작하나요? (string) - 게시글 제목
+- content: 학습을 어떻게 시작하면 좋을까요? 알려주세요. (string) - 내용
+
+## PostCategoryInfo (object)
+- id: 17 (number) - 게시글 카테고리ID
+- boardId: 19 (number) - 소속 게시판ID
+- title: 묻고 답하기 (string) - 게시글 카테고리 이름
+- createDate: `2016-12-31T12:00:00Z` (string) - 게시글 카테고리 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 게시글 카테고리 수정일
+
+## PostCategoryBase (object)
+- title: 묻고 답하기 (string) - 게시글 카테고리 이름
+
+## PostCommentInfo (object)
+- id: 17 (number) - 댓글ID
+- postId: 19 (number) - 소속 게시글ID
+- author (MemberSummary) - 댓글 작성자
+- content: 저도 알고 싶어요. (string) - 내용
+- createDate: `2016-12-31T12:00:00Z` (string) - 댓글 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 댓글 수정일
+
+## PostCommentBase (object)
+- content: 저도 알고 싶어요. (string) - 내용
+
+## MemberMessageInfo (object)
+- id: 17 (number) - 쪽지ID
+- sender (MemberSummary) - 송신 회원
+- receiver (MemberSummary) - 수신 회원
+- content: 친구해요. (string) - 내용
+- read: false (boolean) - 읽음
+- status (optional, enum) - 쪽지 상태
+    - NONE
+    - SENDER_DELETED
+    - RECEIVER_DELETED
+    - BOTH_DELETED
+- readDate: `2016-12-31T12:00:00Z` (optional, string) - 읽은 날짜
+- createDate: `2016-12-31T12:00:00Z` (string) - 쪽지 작성일
+
+## MemberMessageBase (object)
+- content: 친구해요. (string) - 내용
+
+# Group 학습자 시스템
+
+## 학습자 [/students/{studentId}]
+
+학습자는 회원 엔티티와 1:1로 식별관계를 갖는 엔티티이다. 따라서 studentId는 memberId이기도 하다. 하지만 모든 회원 엔티티가 학습자 엔티티를 갖는 것은 아니고 학습자 등록을 해야만 한다.
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+
+### 학습자 조회 [GET]
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (StudentInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 학습자 학습그룹 변경 [PUT /students/{studentId}/grade-group/{grade}]
+
+학습자의 연도별 학습그룹을 변경한다. 학습자 본인은 권한이 없고, 학습설계자만 변경할 수 있다.
+
+연도별 학습그룹 중 연도는 현재년도를 기준으로 변경하며, 학년만을 입력받는다. 학습자의 학습시작일은 현재 표준 스케쥴에 진행중인 표준단원의 첫 차시 날짜를 기준으로 한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + grade: 1 (number) - 학년
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 학습자 콜렉션 [GET /students{?page,size,year,grade}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + year: 2016 (optional, number) - 필터링할 연도
+    + grade: 1 (optional, number) - 필터링할 학년
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[StudentInfo])
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+# Data Structures
+
+## LearningServiceInfo (object)
+- id: 17 (number) - 학습 서비스ID
+- startDate: `2016-03-01` (string) - 학습 시작일
+- endDate: `2016-03-31` (string) - 학습 종료일
+- expired: false (boolean) - 파기 여부
+
+## StudentInfo (MemberInfo)
+- id: 17 (number) - 학습자ID
+- year: 2016 (number) - 학습년도
+- grade: 1 (number) - 학년
+- learnStartDate: `2016-03-01` (string) - 학습시작일
+- delayWeeks: 0 (number) - 진도수정 주
+- delayDate: `2016-12-01` (string) - 진도수정한 날짜
+- learningService (optional, LearningServiceInfo) - 받고있는 학습 서비스
+
+# Group 표준학습 시스템
+
+## 커리큘럼 [/curriculums/{curriculumId}]
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+
+### 커리큘럼 조회 [GET]
+
+커리큘럼 정보를 조회한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (CurriculumInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 커리큘럼 수정 [PUT]
+
+커리큘럼 정보를 수정한다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (CurriculumBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 커리큘럼 삭제 [DELETE]
+
+커리큘럼을 삭제한다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    커리큘럼과 관련된 엔티티가 남아있는 경우 `6002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 커리큘럼 잠금 [PUT /curriculums/{curriculumId}/lock]
+
+커리큘럼을 잠근다.
+
+관련된 모든 엔티티의 추가, 삭제, 수정 등이 불가능해진다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    커리큘럼이 복제 중인 경우 `6031` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 커리큘럼 잠금해제 [PUT /curriculums/{curriculumId}/unlock]
+
+커리큘럼을 잠금해제 한다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    커리큘럼이 복제 중인 경우 `6031` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 커리큘럼 생성 [POST /curriculums]
+
+커리큘럼을 새로 생성한다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (CurriculumBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (CurriculumInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 커리큘럼 복제 [POST /curriculums/{curriculumId}/clone]
+
+커리큘럼을 복제한다.
+
+복제할 커리큘럼이 잠금상태여야만 가능하다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 복제할 커리큘럼ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (CurriculumBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (CurriculumInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    복제할 커리큘럼이 잠금상태가 아닌 경우 `6029` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 커리큘럼 콜렉션 [GET /curriculums{?page,size}]
+
+커리큘럼 목록을 조회한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[CurriculumInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 표준단원 [/units/{unitId}]
+
++ Parameters
+    + unitId: 17 (number) - 표준단원ID
+
+### 표준단원 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (UnitInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 표준단원 수정 [PUT]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (UnitBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준단원 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    단원과 연결된 엔티티가 있는 경우 `6003` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준단원 생성 [POST /curriculums/{curriculumId}/units]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (UnitBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (UnitInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준단원 콜렉션 [GET /curriculums/{curriculumId}/units{?page,size,keyword,grade,semester}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + keyword: 1단원 (optional, string) - 필터링할 키워드
+    + grade: 1 (optional, number) - 필터링할 학년
+    + semester: 1 (optional, number) - 필터링할 학기
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[UnitInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 표준차시 [/periods/{periodId}]
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+
+### 표준차시 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (PeriodInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 표준차시 수정 [PUT]
+
+표준차시가 수정될 때 연결된 표준 스케쥴의 정보도 갱신됨.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PeriodBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준차시와 연결된 스케쥴이 잠겨있는 경우 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준차시 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    차시와 연결된 엔티티가 있는 경우 `6004` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준차시 순서 수정 [PUT /periods/{periodId}/order]
+
+표준차시의 단원내 순서를 수정한다.
+
+지정한 정렬번호로 차시가 이동하며, 이동한 정렬번호와 같거나 큰 차시들은 모두 뒤로 밀린다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준차시 생성 [POST /units/{unitId}/periods]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + unitId: 17 (number) - 표준단원ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PeriodBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준차시 콜렉션 [GET /units/{unitId}/periods{?page,size,keyword}]
+
+해당 표준단원에 소속된 표준차시의 목록을 반환한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + unitId: 17 (number) - 표준단원ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + keyword: 차시 (optional, string) - 필터링할 키워드
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[PeriodInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 문제 [/questions/{questionId}]
+
++ Parameters
+    + questionId: 17 (number) - 문제ID
+
+### 문제 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (QuestionInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 차시 문제 [/periods/{periodId}/questions/{questionId}]
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+    + questionId: 17 (number) - 문제ID
+
+### 차시 문제 수정 [PUT]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (QuestionUpdate)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제의 상태가 `CONFIRMED` 인 경우 `6007` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준차시 이외에 문제와 연결된 엔티티가 존재할 경우 '6006' 에러를 반환한다.
+
+    문제에 소속된 표준차시와 연결된 표준 스케쥴이 잠겨 있으면 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    문제가 `CONFIRMED` 상태이면 `6032` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 순서 수정 [PUT /periods/{periodId}/questions/{questionId}/order]
+
+지정한 정렬번호로 문제가 이동하며, 이동한 정렬번호와 같거나 큰 문제들은 모두 뒤로 밀린다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+    + questionId: 17 (number) - 문제ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제에 소속된 표준차시와 연결된 표준 스케쥴이 잠겨 있으면 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 상태 변경 [PUT /periods/{periodId}/questions/{questionId}/status]
+
+문제의 상태를 변경한다.
+
+문제를 최종확인 상태로 변경하면 문제와 연결된 파일 또한 잠김상태가 된다. 마찬가지로 문제를 최종확인 상태에서 벗어나게 하면 연결된 파일은 잠김해제됨.
+
+::: note
+## 권한
+`DESIGN_MANAGER`, `LMS_MANAGER`, `ADMIN`
+:::
+
+::: note
+## 최종확인 권한
+문제의 상태가 최종확인 상태(`CONFIRMED`)이거나 최종확인 상태로 변경하려는 경우 아래 권한을 가진 회원만 변경이 가능하다.
+
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+    + questionId: 17 (number) - 문제ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (enum)
+        - NOT_CHECKED
+        - CHECKED
+        - CONFIRMED
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제에 소속된 표준차시와 연결된 표준 스케쥴이 잠겨 있으면 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 참조차시 지정 [PUT /periods/{periodId}/questions/{questionId}/ref-period]
+
+문제의 참조차시를 지정한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+    + questionId: 19 (number) - 문제ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    참조된 차시가 자기 자신의 소속 차시일 경우 `6005` 에러를 반환한다.
+
+    문제가 `CONFIRMED` 상태이면 `6007` 에러를 반환한다.
+
+    문제에 소속된 표준차시와 연결된 표준 스케쥴이 잠겨 있으면 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    참조차시가 단원평가 차시가 아닌 경우 `6036` 에러를 반환한다.
+
+    참조차시가 문제가 소속된 단원에 있지 않으면 `6037` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 복제 [POST /periods/{periodId}/questions/clone]
+
+문제를 복제하여 지정한 표준차시로 연결한다.
+
+다른 차시의 문제를 복제하는 것 외에도 문제 템플릿을 복제하여 등록하기 위한 API이다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 소속 차시ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (QuestionInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제를 복제할 표준차시와 연결된 표준 스케쥴이 잠겨 있으면 `6009` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 차시 문제 콜렉션 [GET /periods/{periodId}/questions{?page,size}]
+
+해당 표준차시에 소속된 문제 목록을 반환한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodId: 17 (number) - 표준차시ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[PeriodQuestionInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 문제 템플릿 [/question-templates/{questionId}]
+
+다양한 문제 템플릿을 미리 만들어서 등록한다. 문제를 유일하게 생성할 수 있는 지점이기도 하다.
+
+만들어진 문제 템플릿은 [차시 문제 복제 API](#표준학습-시스템-차시-문제-post-1)를 이용하여 표준차시에 생성할 수 있다. (학습진단도 마찬가지임.)
+
++ Parameters
+    + questionId: 17 (number) - 문제ID
+
+### 문제 템플릿 수정 [PUT]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (QuestionUpdate)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 문제 템플릿 삭제 [DELETE]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 문제 템플릿 카테고리 수정 [PUT /question-templates/{questionId}/category]
+
+문제 템플릿의 카테고리를 수정한다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + questionId: 17 (number) - 문제ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (string)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (ConflictError)
+
+### 문제 템플릿 생성 [POST /question-templates]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (QuestionBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (QuestionInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제 타입과 연결할 파일 타입이 맞지 않는 경우 `6008` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 문제 템플릿 콜렉션 [GET /question-templates{?category}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + category: 카테고리 (optional, number) - 조회할 카테고리 이름
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[QuestionTemplateInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 개념트리 노드 [/concept-tree-nodes/{conceptTreeNodeId}]
+
++ Parameters
+    + conceptTreeNodeId: 17 (number) - 개념트리 노드ID
+
+### 개념트리 노드 조회 [GET]
+
+개념트리 노드를 조회한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (ConceptTreeNodeInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 개념트리 노드 부모 표준단원 변경 [PUT /concept-tree-nodes/{conceptTreeNodeId}/parent/{parentUnitId}]
+
+개념트리 노드의 부모 표준단원을 변경한다. 해당 부모 표준단원에 여러 자식 노드가 존재하면 정렬 번호는 맨 마지막 번호로 변경된다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + conceptTreeNodeId: 17 (number) - 개념트리 노드ID
+    + parentUnitId: 19 (number) - 이동할 부모 표준단원ID
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    이동하려는 위치에 루프가 존재하면 `6017` 에러를 반환한다.
+
+    부모 표준단원과 자식 표준단원의 영역이 다르면 `6018` 에러를 반환한다.
+
+    부모 표준단원의 소속 커리큘럼이 개념트리 노드의 소속 커리큘럼과 다르면 `6019` 에러를 반환한다.
+
+    부모 표준단원에 소속된 자식 표준단원이 중복되면 `6020` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개념트리 노드 순서 변경 [PUT /concpet-tree-nodes/{conceptTreeNodeId}]
+
+개념트리 노드의 부모 노드에 대해 순서를 변경한다. 같은 부모 노드 내에서 변경할 순서와 같거나 큰 정렬번호를 가진 개념트리 노드들은 모두 뒤로 밀린다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + conceptTreeNodeId: 17 (number) - 개념트리 노드ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개념트리 노드 생성 [POST /curriculums/{curriculumId}/concept-tree-nodes/parent/{parentUnitId}/child/{childUnitId}]
+
+부모와 자식 표준단원을 지정하여 개념트리 노드를 생성한다. 부모 표준단원에 이미 여러 개의 자식 표준단원이 있다면 맨 마지막에 추가된다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+    + parentUnitId: 19 (number) - 부모 표준단원ID
+    + childUnitId: 23 (number) - 자식 표준단원ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (ConceptTreeNodeInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    생성하려는 위치에 루프가 존재하면 `6017` 에러를 반환한다.
+
+    부모 표준단원과 자식 표준단원의 영역이 다르면 `6018` 에러를 반환한다.
+
+    부모 표준단원의 소속 커리큘럼이나 자식 표준단원의 커리큘럼이 지정한 커리큘럼과 다르면 `6019` 에러를 반환한다.
+
+    부모 표준단원에 소속된 자식 표준단원이 중복되면 `6020` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개념트리 노드 콜렉션 [GET /curriculums/{curriculumId}/concept-tree-nodes{?areaType}]
+
+해당 커리큘럼에 속하는 개념트리 노드 목록을 반환한다.
+
+개념트리 노드 전체 양이 많지 않을 뿐더러 전부 조회하지 않으면 의미가 없으므로 페이징을 하지 않는다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 커리큘럼ID
+    + areaType: NS (string) - 필터링할 영역 타입
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[ConceptTreeNodeInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 표준 스케쥴 [/schedules/{scheduleId}]
+
++ Parameters
+    + scheduleId: 17 (number) 표준 스케쥴ID
+
+### 표준 스케쥴 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (ScheduleInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 표준 스케쥴 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준 스케쥴이 잠겨있으면 `6012` 에러를 반환한다.
+
+    표준 스케쥴에 연결된 표준학습 결과가 있는 경우 `6015` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 차시 연결 [PUT /schedules/{scheduleId}/periods/{periodId}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + scheduleId: 17 (number) - 표준 스케쥴ID
+    + periodId: 19 (number) - 연결할 표준차시ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준 스케쥴이 잠겨있는 경우 `6012` 에러를 반환한다.
+
+    연결된 표준단원이 표준 스케쥴 상의 다른 표준단원 사이에 위치하게 되면 `6016` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 날짜 변경 [PUT /schedules/{scheduleId}/{learnDate}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + scheduleId: 17 (number) - 표준 스케쥴ID
+    + learnDate: `2016-12-31` (string) - 변경할 날짜
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준 스케쥴이 잠겨있는 경우 `6012` 에러를 반환한다.
+
+    해당 날짜에 다른 표준 스케쥴이 있는 경우 `6013` 에러를 반환한다.
+
+    연결된 표준단원이 표준 스케쥴 상의 다른 표준단원 사이에 위치하게 되면 `6016` 에러를 반환한다.
+
+    해당 날짜가 주말이면 `6033` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 배치 잠금 [PUT /schedules/lock]
+
+표준 스케쥴 집합을 잠금 상태로 만든다.
+
+잠금 상태의 표준 스케쥴은 실제 학습자가 학습을 할 수 있게 되며 연결된 표준차시 등의 수정이나 삭제 등이 불가능해진다. 또한 한번 학습자가 표준학습 결과를 내게 되면 잠금해제도 불가능해짐에 유의.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (array[number])
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준 스케쥴에 연결된 표준 차시의 모든 문제가 최종완료 상태가 아니면 `6014` 에러를 반환한다.
+
+    각 소속 표준단원의 학년 학기에 해당하는 학습진단이 없을 경우 `6022` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 배치 잠금해제 [PUT /schedules/unlock]
+
+표준 스케쥴 집합을 잠금해제한다.
+
+표준 스케쥴에 대해 학습자가 표준 학습결과를 낸 경우에는 잠금해제가 불가능하다.
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (array[number])
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    표준 스케쥴에 연결된 표준학습 결과가 있는 경우 `6015` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 생성 [POST /schedules]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ScheduleBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (ScheduleInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    해당 날짜에 다른 표준 스케쥴이 있는 경우 `6013` 에러를 반환한다.
+
+    연결된 표준단원이 표준 스케쥴 상의 다른 표준단원 사이에 위치하게 되면 `6016` 에러를 반환한다.
+
+    해당 날짜가 주말이면 `6033` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 표준단원 배치 생성 [POST /schedules/units/{unitId}]
+
+해당 표준단원에 있는 표준차시들을 순서대로 표준 스케쥴에 등록한다.
+
+표준차시를 순서대로 등록하다가 다른 표준차시에 막히게 되면 등록을 중단하고 지금까지 등록한 표준 스케쥴 정보만 반환한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + unitId: 17 (number) - 등록할 표준단원ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ScheduleUnitBase)
+
++ Response 201 (application/json)
+    + Attributes (array[ScheduleInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    해당 날짜에 다른 표준 스케쥴이 있는 경우 `6013` 에러를 반환한다.
+
+    연결된 표준단원이 표준 스케쥴 상의 다른 표준단원 사이에 위치하게 되면 `6016` 에러를 반환한다.
+
+    해당 날짜가 주말이면 `6033` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준 스케쥴 콜렉션 [GET /schedules{?page,size,year,grade,month}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + year: 2016 (optional, number) - 필터링할 연도
+    + grade: 1 (optional, number) - 필터링할 학년
+    + month: 1 (optional, number) - 필터링할 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[ScheduleInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 표준 스케쥴 단원 뷰 [/unit-views]
+
+### 표준 스케쥴 단원 뷰 콜렉션 [GET /unit-views{?page,size,year,grade,semester}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + year: 2016 (optional, number) - 필터링할 연도
+    + grade: 1 (optional, number) - 필터링할 학년
+    + semester: 1 (optional, number) - 필터링할 학기
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[UnitViewInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## LMS 로그 [/lms-logs]
+
+### LMS 로그 콜렉션 [GET /lms-logs{?page,size,memberId,actionCode,resourceId}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + memberId: 17 (optional, number) - 필터링할 회원 번호
+    + actionCode: CREATE_UNIT (optional, string) - 필터링할 액션 코드
+    + resourceId: 19 (optional, number) - 필터링할 관련 리소스ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[LmsLogInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+## 문제 신고 [/question-reports/{questionReportId}]
+
+문제 풀이 중 신고 기능 구현.
+
++ Parameters
+    + questionReportId: 17 (number) - 문제 신고ID
+
+### 문제 신고 조회 [GET]
+
+문제 신고 정보를 조회한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (QuestionReportInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 문제 신고 답변 [PUT /question-reports/{questionReportId}/answer]
+
+문제 신고에 답변을 올린다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + questionReportId: 17 (number) - 문제 신고ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (string)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 문제 신고 생성 [POST /question-reports]
+
+문제에 이상이 있을 경우 신고한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (QuestionReportBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (QuestionReportInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 문제 신고 콜렉션 [GET /question-reports{?page,size,answered}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + answered: true (optional, boolean) - 답변 여부
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[QuestionReportInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 내 문제 신고 콜렉션 [GET /me/question-reports{?page,size}]
+
+접속한 회원의 문제 신고 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[QuestionReportInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+# Data Structures
+
+## PeriodType (enum)
+- DAILY_PERIOD
+- TEST_PERIOD
+- INDIVIDUAL_PERIOD
+- WRONG_ANSWER_NOTE_PERIOD
+- DIAGNOSIS_PERIOD
+
+## CurriculumInfo (object)
+- id: 17 (number) - 커리큘럼ID
+- name: 2016년도 (string) - 커리큘럼 이름
+- detail: `2016년도 커리큘럼입니다.` (string) - 커리큘럼 설명
+- status (enum) - 커리큘럼 상태
+    - EDITABLE
+    - LOCKED
+    - CLONED
+    - CLONING
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## CurriculumBase (object)
+- name: 2016년도 (string) - 커리큘럼 이름
+- detail: `2016년도 커리큘럼입니다.` (string) - 커리큘럼 설명
+
+## UnitInfo (object)
+- id: 17 (number) - 표준단원ID
+- curriculumId: 19 (number) - 소속 커리큘럼ID
+- title: 1단원 (string) - 표준단원 제목
+- detail: `1학년 1학기 1단원` - 설명
+- areaType: NS (string) - 영역 타입
+- grade: 1 (number) - 학년
+- semester: 1 (number) - 학기
+- unitNumber: 1 (number) - 단원 번호
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## UnitBase (object)
+- title: 1단원 (string) - 표준단원 제목
+- detail: `1학년 1학기 1단원` - 설명
+- areaType: NS (string) - 영역 타입
+- grade: 1 (number) - 학년
+- semester: 1 (number) - 학기
+- unitNumber: 1 (number) - 단원 번호
+
+## PeriodInfo (object)
+- id: 17 (number) - 표준차시ID
+- unitId: 19 (number) - 소속 표준단원ID
+- title: `1부터 9까지의 수` (string) - 표준차시 제목
+- detail: `1부터 9까지 배워보자` (string) - 설명
+- periodType (PeriodType) - 차시 타입
+- questionCount: 17 (number) - 총 문제 수
+- checkedCount: 10 (number) - 총 검수 수
+- confirmedCount: 3 (number) - 총 최종완료 수
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## PeriodBase (object)
+- title: `1부터 9까지의 수` (string) - 표준차시 제목
+- detail: `1부터 9까지 배워보자` (string) - 설명
+- periodType (PeriodType) - 차시 타입
+
+## QuestionInfo (object)
+- id: 17 (number) - 문제ID
+- questionType: QA (string) - 문제 타입
+- areaType: NS (string) - 영역
+- thinkType: NS (string) - 생각열기 타입
+- thinkCount: 3 (number) - 생각열기 개수
+- answerCount: 2 (number) - 답안 개수
+- difficulty: ALL (string) - 난이도
+- title: `1을 배우자` (string) - 문제 제목
+- detail: `1을 배워보는 문제` (string) - 문제 설명
+- conceptType: NS (string) - 개념 타입
+- subConceptType: AD (string) - 하위 개념 타입
+- file (FileInfo) - 파일
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## QuestionBase (object)
+- questionType: QA (string) - 문제 타입
+- areaType: NS (string) - 영역
+- thinkType: NS (string) - 생각열기 타입
+- thinkCount: 3 (number) - 생각열기 개수
+- answerCount: 2 (number) - 답안 개수
+- difficulty: ALL (string) - 난이도
+- title: `1을 배우자` (string) - 문제 제목
+- detail: `1을 배워보는 문제` (string) - 문제 설명
+- conceptType: NS (string) - 개념 타입
+- subConceptType: AD (string) - 하위 개념 타입
+- fileId: 19 (number) - 연결할 파일ID
+
+## QuestionUpdate (object)
+- questionType: QA (string) - 문제 타입
+- areaType: NS (string) - 영역
+- thinkType: NS (string) - 생각열기 타입
+- thinkCount: 3 (number) - 생각열기 개수
+- answerCount: 2 (number) - 답안 개수
+- difficulty: ALL (string) - 난이도
+- title: `1을 배우자` (string) - 문제 제목
+- detail: `1을 배워보는 문제` (string) - 문제 설명
+- conceptType: NS (string) - 개념 타입
+- subConceptType: AD (string) - 하위 개념 타입
+
+## PeriodQuestionInfo (QuestionInfo)
+- periodId: 19 (number) - 소속 표준차시ID
+- refPeriodId: 23 (optional, number) - 참조차시ID
+- status: CHECKED (enum) - 문제 상태
+    - NOT_CHECKED
+    - CHECKED
+    - CONFIRMED
+
+## QuestionTemplateInfo (QuestionInfo)
+- category: 카테고리 (string) - 템플릿 카테고리 이름
+
+## ScheduleInfo (object)
+- id: 17 (number) - 표준 스케쥴ID
+- period (PeriodInfo) - 연결된 표준차시 정보
+- year: 2016 (number) - 연도
+- grade: 1 (number) - 학년
+- learnDate: `2016-12-31` (string) - 학습일
+- title: `1을 배우자` (string) - 표준 스케쥴 제목
+- locked: false (boolean) - 잠김여부
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## ScheduleBase (object)
+- periodId: 17 (number) - 표준차시ID
+- year: 2016 (number) - 연도
+- grade: 1 (number) - 학년
+- learnDate: `2016-12-31` (string) - 학습일
+
+## ScheduleUnitBase (object)
+- year: 2016 (number) - 연도
+- grade: 1 (number) - 학년
+- startDate: `2016-12-01` (string) - 단원시작일
+
+## UnitViewInfo (object)
+- unit (UnitInfo) - 연결된 표준단원
+- year: 2016 (number) - 연도
+- grade: 1 (number) - 학년
+- semester: 1 (number) - 학기
+- slotCount: 10 (number) - 총 슬롯 수
+- periodCount: 5 (number) - 등록된 차시 수
+- startDate: `2016-12-01` (string) - 시작일
+- endDate: `2016-12-01` (string) - 종료일
+
+## ConceptTreeNodeInfo (object)
+- id: 17 (number) - 개념트리 노드ID
+- parentUnit (UnitInfo) - 부모 표준단원
+- childUnit (UnitInfo) - 자식 표준단원
+- areaType: NS (string) - 영역 타입
+- sortNumber: 1 (number) - 정렬번호
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## LmsLogInfo (object)
+- id: 17 (number) - LMS 로그ID
+- member (MemberSummary) - 로그 회원
+- actionCode (enum) - 액션 코드
+    - CREATE_UNIT
+    - UPDATE_UNIT
+    - DELETE_UNIT
+    - CREATE_PERIOD
+    - UPDATE_PERIOD
+    - DELETE_PERIOD
+    - CREATE_QUESTION
+    - UPDATE_QUESTION
+    - DELETE_QUESTION
+    - QUESTION_STATUS
+    - CREATE_SCHEDULE
+    - UPDATE_SCHEDULE
+    - DELETE_SCHEDULE
+- resourceId: 19 (optional, number) - 관련 리소스ID
+- data (object) - JSON 데이터
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+
+## QuestionReportType (enum)
+- STRANGE_QUESTION_REPORT
+- DIFFICULT_QUESTION_REPORT
+- ERROR_QUESTION_REPORT
+- ETC_REPORT
+
+## QuestionReportInfo (object)
+- id: 17 (number) - 문제 신고ID
+- student (MemberSummary) - 학생 정보
+- questionId: 19 (number) - 신고 문제
+- reportType (QuestionReportType) - 문제 신고 타입
+- content: 문제가 이상해요. (string) - 내용
+- answer: 답변입니다. (optional, string) - 답변
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## QuestionReportBase (object)
+- questionId: 17 (number) - 신고할 문제ID
+- reportType (QuestionReportType) - 문제 신고 타입
+- content: 문제가 이상해요. (string) - 내용
+
+# Group 학습진단 시스템
+
+## 학습진단 [/diagnoses/{diagnosisId}]
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+
+### 학습진단 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (DiagnosisInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 학습진단 수정 [PUT]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (DiagnosisBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    학습진단과 연결된 엔티티가 있는 경우 `6038` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 생성 [POST /curriculums/{curriculumId}/diagnoses]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 소속 커리큘럼ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (DiagnosisBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (DiagnosisInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 콜렉션 [GET /curriculums/{curriculumId}/diagnoses{?page,size,grade,semester}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 소속 커리큘럼ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + grade: 1 (optional, number) - 필터링할 학년
+    + semester: 1 (optional, number) - 필터링할 학기
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[DiagnosisInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 학습진단 문제 [/diagnoses/{diagnosisId}/questions/{questionId}]
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+    + questionId: 19 (number) - 문제ID
+
+### 학습진단 문제 수정 [PUT]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (QuestionUpdate)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    문제의 상태가 `CONFIRMED` 인 경우 `6007` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 삭제 [DELETE]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    학습진단 이외에 문제와 연결된 엔티티가 존재할 경우 '6006' 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    문제가 `CONFIRMED` 상태이면 `6032` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 순서 수정 [PUT /diagnoses/{diagnosisId}/questions/{questionId}/order]
+
+지정한 정렬번호로 문제가 이동하며, 이동한 정렬번호와 같거나 큰 문제들은 모두 뒤로 밀린다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+    + questionId: 19 (number) - 문제ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 참조단원 지정 [PUT /diagnoses/{diagnosisId}/questions/{questionId}/ref-unit]
+
+문제의 참조단원을 지정한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+    + questionId: 19 (number) - 문제ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 상태 변경 [PUT /diagnoses/{diagnosisId}/questions/{questionId}/status]
+
+문제의 상태를 변경한다.
+
+문제를 최종확인 상태로 변경하면 문제와 연결된 파일 또한 잠김상태가 된다. 마찬가지로 문제를 최종확인 상태에서 벗어나게 하면 연결된 파일은 잠김해제됨.
+
+::: note
+## 권한
+`DESIGN_MANAGER`, `LMS_MANAGER`, `ADMIN`
+:::
+
+::: note
+## 최종확인 권한
+문제의 상태가 최종확인 상태(`CONFIRMED`)이거나 최종확인 상태로 변경하려는 경우 아래 권한을 가진 회원만 변경이 가능하다.
+
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+    + questionId: 19 (number) - 문제ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (enum)
+        - NOT_CHECKED
+        - CHECKED
+        - CONFIRMED
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 오프라인 차시 결과 전송 [POST /diagnoses/{diagnosisId}/students/{studentId}/result]
+
+학습 서비스의 학습진단 차시 결과 전송 API와 동일하지만 오프라인 결과로서 처리한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ClientResult)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodResultInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    이미 같은 차시의 결과가 있는 경우 `6026` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 복제 [POST /diagnoses/{diagnosisId}/questions/clone]
+
+문제를 복제하여 지정한 학습진단으로 연결한다.
+
+문제 템플릿을 복제하여 등록하기 위한 API이다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (number)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (QuestionInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 문제 콜렉션 [GET /diagnoses/{diagnosisId}/questions{?page,size}]
+
+해당 표준차시에 소속된 문제 목록을 반환한다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[DiagnosisQuestionInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## DiagnosisInfo (object)
+- id: 17 (number) - 학습진단ID
+- curriculumId: 19 (number) - 소속 커리큘럼ID
+- grade: 1 (number) - 학년
+- semester: 1 (number) - 학기
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## DiagnosisBase (object)
+- grade: 1 (number) - 학년
+- semester: 1 (number) - 학기
+
+## DiagnosisQuestionInfo (QuestionInfo)
+- diagnosisId: 19 (number) - 소속 학습진단ID
+- refUnitId: 23 (number) - 참조단원ID
+- allotedScore: 5 (number) - 배점
+
+# Group 개별학습 시스템
+
+## 개별학습 조건 [/individual-conditions/{individualConditionId}]
+
++ Parameters
+    + individualConditionId: 17 (number) - 개별학습 조건ID
+
+### 개별학습 조건 조회 [GET]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IndividualConditionInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 개별학습 조건 수정 [PUT]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IndividualConditionBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    겹치는 조건의 개별학습 조건이 있으면 `6021` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    잘못된 개별학습 코드인 경우 `6035` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개별학습 조건 삭제 [DELETE]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개별학습 조건 생성 [POST /curriculums/{curriculumId}/individual-conditions]
+
+::: note
+## 권한
+`LMS_MANAGER`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 소속 커리큘럼ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IndividualConditionBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IndividualConditionInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    겹치는 조건의 개별학습 조건이 있으면 `6021` 에러를 반환한다.
+
+    소속 커리큘럼이 편집가능 상태가 아닌 경우 `6030` 에러를 반환한다.
+
+    잘못된 개별학습 코드인 경우 `6035` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개별학습 조건 콜렉션 [GET /curriculums/{curriculumId}/individual-conditions{?page,size}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + curriculumId: 17 (number) - 소속 커리큘럼ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IndividualConditionInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 개별학습 프로세스 [/individual-processes/{individualProcessId}]
+
++ Parameters
+    + individualProcessId: 17 (number) - 개별학습 프로세스ID
+
+### 개별학습 프로세스 콜렉션 [GET /students/{studentId}/individual-processes{?page,size,individualType}]
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + individualType (IndividualType) - 필터링할 개별학습 타입
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IndividualProcessInfo])
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 개별학습 차시 콜렉션 [GET /individual-processes/{individualProcessId}/individual-periods{?page,size}]
+
++ Parameters
+    + individualProcessId: 17 (number) - 개별학습 프로세스ID
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IndividualPeriodInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## IndividualType (enum)
+- RELEARNING
+- PRIOR_LEARNING
+
+## IndividualConditionInfo (object)
+- id: 17 (number) - 개별학습 조건ID
+- curriculumId: 19 (number) - 소속 커리큘럼ID
+- individualType (IndividualType) - 개별학습 타입
+- title: `1-1` (string) - 제목
+- detail: `1급 1단계 조건` (string) - 설명
+- processCode: `r1 br 50 7 r1 ...` (string) - 프로세스 코드
+- attendanceRate: 0.8 (number) - 출석률
+- learningTier: A (string) - 학습 단계
+- upperScore: 70 (number) - 상한점수
+- lowerScore: 50 (number) - 하한점수
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## IndividualConditionBase (object)
+- individualType (IndividualType) - 개별학습 타입
+- title: `1-1` (string) - 제목
+- detail: `1급 1단계 조건` (string) - 설명
+- processCode: `r1 br 50 7 r1 ...` (string) - 프로세스 코드
+- attendanceRate: 0.8 (number) - 출석률
+- learningTier: A (string) - 학습 단계
+- upperScore: 70 (number) - 상한점수
+- lowerScore: 50 (number) - 하한점수
+
+## IndividualProcessInfo (object)
+- id: 17 (number) - 개별학습 프로세스ID
+- individualType (IndividualType) - 개별학습 타입
+- title: `1-1` (string) - 제목 
+- processCode: `r1 br 50 7 r1 ...` (string) - 프로세스 코드
+- nextLine: 2 (number) - 다음줄 번호
+- completed: false (boolean) - 완료여부
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## IndividualPeriodInfo (object)
+- id: 17 (number) - 개별학습 차시ID
+- individualUnitId: 19 (number) - 개별학습 단원ID
+- averageScore: 90 (number) - 평균점수
+- periodResult (optional, PeriodResultInfo) - 차시결과
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+# Group 학습 결과 시스템
+
+## 차시별 결과 조회 [GET /learning/period-results/{periodResultId}]
+
+학습한 차시 결과를 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodResultId: 17 (number) - 차시 결과ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (PeriodResultInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 차시별 문제 결과 조회 [GET /learning/period-results/{periodResultId}/question-results]
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + periodResultId: 17 (number) - 차시 결과ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[QuestionResultInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## PeriodResultInfo (object)
+- id: 17 (number) - 차시결과ID
+- studentId: 19 (number) - 학습자ID
+- periodType (PeriodType) - 차시타입
+- score: 90 (number) - 획득점수
+- combo: 2 (number) - 콤보 횟수
+- stars: 3 (number) - 별 갯수
+- walnuts: 10 (number) - 획득 호두
+- thinkCount: 11 (number) - 생각열기 개수
+- thinkOpenCount: 3 (number) - 생각열기 열람수
+- retryCount: 1 (number) - 재시도 횟수
+- stayTime: 300 (number) - 풀이 시간
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+
+## QuestionResultInfo (object)
+- id: 17 (number) - 문제결과ID
+- questionId: 19 (number) - 문제ID 
+- correct: true (boolean) - 정답여부
+- score: 30 (number) - 개별 획득점수
+- areaType: NS (string) - 영역
+
+## LearningType (enum)
+- DAILY_LEARNING
+- RELEARNING
+- PRIOR_LEARNING
+- OVERDUE_LEARNING
+- WRONG_ANSWER_NOTE_LEARNING
+- DIAGNOSIS_LEARNING
+
+## ClientResult (object)
+- score: 90 (number) - 획득점수
+- combo: 2 (optional, number) - 콤보 횟수
+- stars: 3 (optional, number) - 별 갯수
+- walnuts: 10 (optional, number) - 획득 호두
+- thinkCount: 11 (optional, number) - 생각열기 개수
+- thinkOpenCount: 3 (optional, number) - 생각열기 열람수
+- retryCount: 1 (optional, number) - 재시도 횟수
+- stayTime: 300 (number) - 풀이 시간
+- questionResults (optional, object) - 문제 결과 목록
+    - questionType: QA (string) - 문제 타입
+    - questionId: 19 (number) - 문제ID
+    - correct: true (boolean) - 정답여부
+    - score: 90 (number) - 문제 점수
+    - thinkCount: 3 (optional, number) - 생각열기 개수
+    - thinkOpenCount: 1 (optional, number) - 생각열기 열람수
+    - answerResults (optional, object) - 답안 결과 목록
+        - correct: true (boolean) - 답안 정답여부
+        - wrongCount: 1 (optional, number) - 틀린 횟수
+        - thinkOpened: true (optional, boolean) - 생각열기 열람여부
+        - thinkAnswer: 2 (optional, number) - 생각열기 정답수
+        - thinkOpens: 8, 3, 2 (optional, array[number]) - 생각열기 열람 순서
+
+# Group 학습 통계 시스템
+
+## 학습자별 단원 학습 통계 조회 [GET /learning/students/{studentId}/unit-stats{?grade,semester}]
+
+학습자별 단원 학습 통계를 조회한다.
+
+관리자나 선생님, 학부모가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + grade: 1 (number) - 학년
+    + semester: 1 (number) - 학기
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (array[UnitLearningResult])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 학습자별 월 학습 통계 조회 [GET /learning/students/{studentId}/monthly-stats{?month}]
+
+학습자별 월 학습 통계를 조회한다.
+
+관리자나 선생님, 학부모가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + month: 1 (number) - 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageLearningResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+
+## 학습자 단원별 생각열기 통계 조회 [GET /learning/students/{studentId}/units/{unitId}/think-stats]
+
+학습자의 단원별 생각열기 통계를 조회한다.
+
+관리자나 선생님, 학부모가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + unitId: 19 (number) - 표준단원ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 학습자 월별 생각열기 통계 조회 [GET /learning/students/{studentId}/monthly-think-stats{?year,month}]
+
+학습자의 월별 생각열기 통계를 조회한다.
+
+관리자나 선생님, 학부모가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+    + year: 2017 (number) - 연도
+    + month: 4 (number) - 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 학습자 집중훈련 기간 생각열기 통계 조회 [GET /learning/students/{studentId}/intensive-think-stats]
+
+학습자의 집중훈련 기간 중의 생각열기 통계를 조회한다.
+
+관리자나 선생님, 학부모가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`INSTRUCTOR`, `ADMIN`
+:::
+
++ Parameters
+    + studentId: 17 (number) - 학습자ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 단원별 생각열기 전체 통계 조회 [GET /learning/units/{unitId}/think-stats]
+
+해당 단원의 전체 생각열기 통계를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + unitId: 19 (number) - 표준단원ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 월별 생각열기 전체 통계 조회 [GET /learning/units/{unitId}/monthly-think-stats{?year,month}]
+
+해당 월의 전체 생각열기 통계를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + unitId: 19 (number) - 표준단원ID
+    + year: 2017 (number) - 연도
+    + month: 4 (number) - 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 학년별 생각열기 전체 통계 조회 [GET /learning/units/{unitId}/grade-think-stats{?grade}]
+
+해당 학년의 전체 생각열기 통계를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + unitId: 19 (number) - 표준단원ID
+    + grade: 1 (number) - 학년
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+
+    + Attributes (AverageThinkResult)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## AverageLearningResult (object)
+- myAverageScore: 90 (number) - 내 평균점수
+- gradeAverageScore: 90 (number) - 학년 평균점수
+
+## UnitLearningResult (AverageLearningResult)
+- unit (UnitInfo) - 단원정보
+
+## AverageThinkResult (object)
+- thinkScore: 90 (number) - 생각열기 점수
+- observationScore: 90 (number) - 관찰단계 점수
+- discoveryScore: 90 (number) - 발견단계 점수
+- checkScore: 90 (number) - 검산단계 점수
+- subScores (array[number]) - 요소별 점수
+
+# Group 학습 서비스
+
+학습자가 실제 학습 차시를 불러오고 결과를 전송하기까지의 서비스를 담당한다.
+
+클라이언트는 [오늘의 학습 조회](#학습-서비스-오늘의-학습-조회-get) API 등을 이용하여 학습자가 학습할 수 있는 학습 차시 목록을 학습자에게 제공한다.
+
+학습 실행기에서 실제로 학습할 정보를 가져올 API는 **learningUrl**을 참조하면 된다. **learningUrl**에서 가져온 차시 정보에 또한 **submitUrl** 참조가 제공되는데, 이 참조는 클라이언트가 사용자가 학습한 결과를 전송하기 위한 URL이다.
+
+## 오늘의 학습 조회 [GET /learning/today]
+
+학습자가 오늘 학습해야할 학습 차시 목록을 불러온다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes
+        - unitRate: 0.8 (number) - 단원 진행률
+        - learnings (array[LearningItem]) - 학습 차시 목록
+        - learnDate: `2017-01-02` - 학습일
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 409 (application/json)
+
+    해당 학기의 학습진단을 받지 않은 경우 `6023` 에러를 반환한다.
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 월별 스케쥴 조회 [GET /learning/monthly-schedules{?year,month}]
+
+학습자의 월별 스케쥴 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + year: 2017 (number) - 연도
+    + month: 4 (number) - 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[DailyLearningInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 월별 단원 조회 [GET /learning/monthly-unit-views{?year,month}]
+
+해당 월의 스케쥴에 등록된 단원 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + year: 2017 (number) - 연도
+    + month: 4 (number) - 월
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[UnitViewInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 표준학습 차시 [/learning/schedules/{scheduleId}]
+
++ Parameters
+    + scheduleId: 17 (number) - 표준 스케쥴ID
+
+### 표준학습 차시 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (LearningPeriodInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    해당 학기의 학습진단을 받지 않은 경우 `6023` 에러를 반환한다.
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    완료하지 않은 복습 차시가 있는 경우 `6034` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 표준학습 차시 결과 전송 [POST]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ClientResult)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodResultInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    해당 학기의 학습진단을 받지 않은 경우 `6023` 에러를 반환한다.
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    이미 같은 차시의 결과가 있는 경우 `6026` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    완료하지 않은 복습 차시가 있는 경우 `6034` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 개별학습 차시 [/learning/individuals/{individualPeriodId}]
+
++ Parameters
+    + individualPeriodId: 17 (number) - 개별학습 차시ID
+
+### 개별학습 차시 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (LearningPeriodInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    학습자 본인의 학습 차시가 아닌 경우 `6028` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 개별학습 차시 결과 전송 [POST]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ClientResult)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodResultInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    이미 같은 차시의 결과가 있는 경우 `6026` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    학습자 본인의 학습 차시가 아닌 경우 `6028` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 오답노트 차시 [/learning/wrong-answer-notes/{wrongAnswerNotePeriodId}]
+
++ Parameters
+    + wrongAnswerNotePeriodId: 17 (number) - 오답노트 차시ID
+
+### 오답노트 차시 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (LearningPeriodInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    학습자 본인의 학습 차시가 아닌 경우 `6028` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 오답노트 차시 결과 전송 [POST]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ClientResult)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodResultInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    학습자 본인의 학습 차시가 아닌 경우 `6028` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 오답노트 차시 콜렉션 [GET /learning/wrong-answer-notes{?page,size,date,semester,periodType}]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호.
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+    + date: `2016-12` (optional, string) - 필터링할 학습연월
+    + periodType: TEST_PERIOD (optional, string) - 필터링할 차시 타입
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[WrongAnswerNotePeriodInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 학습진단 차시 [/learning/diagnoses/{diagnosisId}]
+
++ Parameters
+    + diagnosisId: 17 (number) - 학습진단 차시ID
+
+### 학습진단 차시 조회 [GET]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (LearningPeriodInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 학습진단 차시 결과 전송 [POST]
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (ClientResult)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (PeriodResultInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 학습자가 아닌 경우 `6024` 에러를 반환한다.
+
+    학습 서비스가 없거나 종료된 경우 `6025` 에러를 반환한다.
+
+    이미 같은 차시의 결과가 있는 경우 `6026` 에러를 반환한다.
+
+    학습자의 학습 기간을 벗어난 학습일 경우 `6027` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+# Data Structures
+
+## LearningItem (object)
+- learningType (LearningType)
+- learningUrl: `https://thinkmath.co.kr/api/learning/schedules/17` (string) - 차시 요청 URL
+- title: `9까지의 수` (string) - 차시 제목
+- detail: `0을 알 수 있고, 6, 7, 8, 9를 쓰고 읽을 수 있다.` (string) - 차시 설명
+- unit (UnitInfo) - 관련 표준단원
+- periodResult (optional, PeriodResultInfo) - 차시결과
+- completed: false (boolean) - 완료여부
+- thumbnails: `http://thinkmath.co.kr/thumb1.png`, `http://thinkmath.co.kr/thumb2.png`, `http://thinkmath.co.kr/thumb3.png` (array[string]) - 문제 섬네일 URL 목록
+
+## LearningQuestionInfo (object)
+- questionId: 17 (number) - 문제ID
+- questionType: QA (string) - 문제 타입
+- title: `1을 배우자` (string) - 문제 제목
+- url: `http://file.thinkmath.co.kr/questions/17` (string) - 문제 파일 URL
+- thinkType: NS (optional, string) - 생각열기 타입
+- thinkCount: 3 (optional, number) - 생각열기 개수
+
+## LearningPeriodInfo (object)
+- submitUrl: `https://thinkmath.co.kr/api/learning/schedules/17` (string) - 결과 전송 URL
+- title: `9까지의 수` (string) - 차시 제목
+- detail: `0을 알 수 있고, 6, 7, 8, 9를 쓰고 읽을 수 있다.` (string) - 차시 설명
+- unit (UnitInfo) - 관련 표준단원
+- questions (array[LearningQuestionInfo])
+- periodResult (optional, PeriodResultInfo) - 차시결과
+- completed: false (boolean) - 완료여부
+
+## DailyLearningInfo (object)
+- scheduleId: 17 (number) - 표준 스케쥴ID
+- unit (UnitInfo) - 관련 표준단원
+- title: `9까지의 수` (string) - 차시 제목
+- learnDate: `2016-12-31` (string) - 학습일
+- periodResult (optional, PeriodResultInfo) - 차시결과
+- completed: false (boolean) - 학습 완료여부
+
+## WrongAnswerNotePeriodInfo (object)
+- id: 17 (number) - 오답노트 차시ID
+- periodType (PeriodType) - 표준차시 타입
+- title: `9까지의 수` (string) - 차시 제목
+- challengeCount: 3 (number) - 도전 횟수
+- questionCount: 7 (number) - 총 문제 수
+- firstWrongCount: 5 (number) - 최초 오답 수
+- wrongCount: 3 (number) - 오답 수
+- averageScore: 80 (number) - 평균점수
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+# 결제 시스템
+
+# Data Structures
+
+## WalnutItemInfo (object)
+- id: 17 (number) - 호두 아이템ID
+- itemType: IPANG_CHARACTER (string) - 아이템 타입
+- name: 더기 (string) - 아이템 이름
+- detail: 캐릭터 (string) - 아이템 설명
+- walnuts: 100 (number) - 아이템 구매 호두 비용
+- display: true (boolean) - 진열 여부
+- purchasable: true (boolean) - 매입 가능 여부
+- purchaseWalnuts: 50 (number) - 매입 가격
+- file (FileInfo) - 연결 파일
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+- updateDate: `2016-12-31T12:00:00Z` (string) - 수정일
+
+## WalnutItemBase (object)
+- name: 더기 (string) - 아이템 이름
+- detail: 캐릭터 (string) - 아이템 설명
+- walnuts: 100 (number) - 아이템 구매 호두 비용
+- display: true (boolean) - 진열 여부
+- purchasable: true (boolean) - 매입 가능 여부
+- purchase_walnuts: 50 (number) - 매입 가격
+- fileId: 17 (number) - 연결 파일ID
+
+## WalnutTransactionType (enum)
+- BUY
+- SELL
+- GIFT
+
+## WalnutTransactionStatus (enum)
+- COMPLETED
+- DENIED
+
+## WalnutTransaction (object)
+- id: 17 (number) - 호두 트랜잭션ID
+- member (MemberSummary) - 트랜잭션 회원 정보
+- transactionType (WalnutTransactionType) - 트랜잭션 타입
+- walnuts: 100 (number) - 트랜잭션 호두 수
+- status (WalnutTransactionStatus) - 트랜잭션 상태
+- detail: 아이템 구매 (string) - 트랜잭션 설명
+- completeDate: `2016-12-31T12:00:00Z` (string) - 완료일
+
+# Group 아이팡 시스템
+
+## 아이팡 활동레벨 [/ipang/activity-levels/{activityLevel}]
+
++ Parameters
+    + activityLevel: 17 (number) - 아이팡 활동레벨
+
+### 아이팡 활동레벨 정보 조회 [GET]
+
+아이팡 활동레벨 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangActivityInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 활동레벨 정보 콜렉션 조회 [GET /ipang/activity-levels]
+
+아이팡 활동레벨 정보를 모두 조회한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[IpangActivityInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 활동레벨 정보 콜렉션 갱신 [PUT /ipang/activity-levels]
+
+아이팡 활동레벨 전체를 갱신한다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (array[IpangActivityInfo])
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 409 (application/json)
+
+    활동레벨이 연속적이지 않을 경우 `8011` 에러를 반환한다.
+
+    활동레벨 경험치가 오름차순이 아닐 경우 `8012` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 프로필 [/ipang/members/{memberId}/profile]
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
+### 아이팡 프로필 조회 [GET]
+
+아이팡 프로필을 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangProfileInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 메시지 변경 [PUT /ipang/members/{memberId}/message]
+
+아이팡의 메시지를 변경한다.
+
+관리자가 아니면 접속한 본인의 것만 변경이 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (string)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 이모션 아이콘 변경 [PUT /ipang/members/{memberId}/emotion]
+
+아이팡의 이모션 아이콘을 변경한다.
+
+관리자가 아니면 접속한 본인의 것만 변경이 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangEmotionType)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 아이팡 캐릭터 [/ipang/characters/{ipangCharacterId}]
+
++ Parameters
+    + ipangCharacterId: 17 (number) - 아이팡 캐릭터ID
+
+### 아이팡 캐릭터 조회 [GET]
+
+아이팡 캐릭터 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangCharacterInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 수정 [PUT]
+
+아이팡 캐릭터 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangCharacterBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 삭제 [DELETE]
+
+아이팡 캐릭터를 삭제한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    관련된 엔티티가 남아있는 경우 `8001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 캐릭터 생성 [POST /ipang/characters]
+
+아이팡 캐릭터를 새로 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangCharacterBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IpangCharacterInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 캐릭터 콜렉션 [GET /ipang/characters{?page,size}]
+
+아이팡 캐릭터 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangCharacterInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+### 아이팡 캐릭터 구매 [POST /ipang/characters/{ipangCharacterId}/buy]
+
+아이팡 캐릭터를 구매한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterId: 19 (number) - 구매 아이템ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 가진 호두수가 모자란 경우 `8002` 에러를 반환한다.
+
+    회원이 가진 캐릭터 슬롯수가 모자란 경우 `8003` 에러를 반환한다.
+
+    회원이 이미 같은 캐릭터를 가지고 있다면 `8005` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 장비 [/ipang/equipments/{ipangEquipmentId}]
+
++ Parameters
+    + ipangEquipmentId: 17 (number) - 아이팡 장비ID
+
+### 아이팡 장비 조회 [GET]
+
+아이팡 장비 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangEquipmentInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 장비 수정 [PUT]
+
+아이팡 장비 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangEquipmentBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 장비 삭제 [DELETE]
+
+아이팡 장비를 삭제한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    관련된 엔티티가 남아있는 경우 `8001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 장비 생성 [POST /ipang/equipments]
+
+아이팡 장비를 새로 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangEquipmentBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IpangEquipmentInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 장비 콜렉션 [GET /ipang/equipments{?page,size}]
+
+아이팡 장비 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangEquipmentInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+### 아이팡 장비 구매 [POST /ipang/equipments/{ipangEquipmentId}/buy]
+
+아이팡 장비를 구매한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangEquipmentId: 19 (number) - 구매 장비ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 가진 호두수가 모자란 경우 `8002` 에러를 반환한다.
+
+    회원이 가진 장비 슬롯수가 모자란 경우 `8004` 에러를 반환한다.
+
+    회원이 이미 같은 장비를 가지고 있다면 `8006` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 룸스킨 [/ipang/room-skin/{ipangRoomSkinId}]
+
++ Parameters
+    + ipangRoomSkinId: 17 (number) - 아이팡 룸스킨ID
+
+### 아이팡 룸스킨 조회 [GET]
+
+아이팡 룸스킨 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangRoomSkinInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 룸스킨 수정 [PUT]
+
+아이팡 룸스킨 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangRoomSkinBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 룸스킨 삭제 [DELETE]
+
+아이팡 룸스킨을 삭제한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    관련된 엔티티가 남아있는 경우 `8001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 룸스킨 생성 [POST /ipang/room-skins]
+
+아이팡 룸스킨을 새로 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangRoomSkinBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IpangRoomSkinInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 룸스킨 콜렉션 [GET /ipang/room-skins{?page,size}]
+
+아이팡 룸스킨 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangRoomSkinInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+### 아이팡 룸스킨 구매 [POST /ipang/room-skins/{ipangRoomSkinId}/buy]
+
+아이팡 룸스킨을 구매한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangRoomSkinId: 19 (number) - 구매 룸스킨ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 가진 호두수가 모자란 경우 `8002` 에러를 반환한다.
+
+    회원이 이미 같은 룸스킨을 가지고 있다면 `8007` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 스티커 [/ipang/stickers/{ipangStickerId}]
+
++ Parameters
+    + ipangStickerId: 17 (number) - 아이팡 스티커ID
+
+### 아이팡 스티커 조회 [GET]
+
+아이팡 스티커 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangStickerInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 스티커 수정 [PUT]
+
+아이팡 스티커를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangStickerBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 스티커 삭제 [DELETE]
+
+아이팡 스티커를 삭제한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    관련된 엔티티가 남아있는 경우 `8001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 스티커 생성 [POST /ipang/stickers]
+
+아이팡 스티커를 새로 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangStickerBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IpangStickerInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 스티커 콜렉션 [GET /ipang/stickers{?page,size}]
+
+아이팡 스티커 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangStickerInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+### 아이팡 스티커 구매 [POST /ipang/stickers/{ipangStickerId}/buy]
+
+아이팡 스티커를 구매한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangStickerId: 19 (number) - 구매 스티커ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 가진 호두수가 모자란 경우 `8002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 슬롯 [/ipang/slots/{ipangSlotId}]
+
++ Parameters
+    + ipangSlotId: 17 (number) - 아이팡 슬롯ID
+
+### 아이팡 슬롯 조회 [GET]
+
+아이팡 슬롯 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangSlotInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 슬롯 수정 [PUT]
+
+아이팡 슬롯 정보를 수정한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangSlotBase)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 슬롯 삭제 [DELETE]
+
+아이팡 슬롯을 삭제한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    관련된 엔티티가 남아있는 경우 `8001` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 슬롯 생성 [POST /ipang/slots]
+
+아이팡 슬롯을 새로 생성한다.
+
+::: note
+## 권한
+`SITE_MANAGER`, `ADMIN`
+:::
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangSlotBase)
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (IpangSlotInfo)
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
+### 아이팡 슬롯 콜렉션 [GET /ipang/slots{?page,size}]
+
+아이팡 슬롯 목록을 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangSlotInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
+### 아이팡 슬롯 구매 [POST /ipang/slots/{ipangSlotId}/buy]
+
+아이팡 슬롯을 구매한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangSlotId: 19 (number) - 구매 슬롯ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원이 가진 호두수가 모자란 경우 `8002` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+## 아이팡 인벤토리 [/ipang/members/{memberId}/inventory]
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
+### 아이팡 캐릭터 인벤토리 조회 [GET /ipang/inventory/characters/{ipangCharacterInventoryId}]
+
+아이팡 캐릭터 인벤토리를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangCharacterInventoryInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 인벤토리 콜렉션 [GET /ipang/members/{memberId}/inventory/characters{?page,size}]
+
+아이팡 캐릭터 인벤토리 목록를 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangCharacterInventoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 대표 캐릭터 콜렉션 [GET /ipang/members/{memberId}/inventory/main-characters]
+
+아이팡 대표 캐릭터 목록을 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (array[IpangCharacterInventoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 장비 인벤토리 콜렉션 [GET /ipang/members/{memberId}/inventory/equipments{?page,size}]
+
+아이팡 장비 인벤토리 목록을 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangEquipmentInventoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 룸스킨 인벤토리 콜렉션 [GET /ipang/members/{memberId}/inventory/room-skins{?page,size}]
+
+아이팡 룸스킨 인벤토리 목록을 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangRoomSkinInventoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 스티커 인벤토리 콜렉션 [GET /ipang/members/{memberId}/inventory/stickers{?page,size}]
+
+아이팡 스티커 인벤토리 목록을 조회한다.
+
+관리자가 아니면 접속한 본인의 것만 조회가 가능하다.
+
+::: note
+## 권한
+`ADMIN`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+    + page: 5 (optional, number) - 조회할 페이지 번호
+    + size: 20 (optional, number) - 페이지 당 조회 개수
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Headers
+
+            X-Pagination-Count: 100
+            X-Pagination-Page: 5
+            X-Pagination-Limit: 20
+
+    + Attributes (array[IpangStickerInventoryInfo])
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 대표 캐릭터 지정 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/main]
+
+아이팡 캐릭터를 대표 캐릭터로 지정한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    대표 캐릭터 지정 자리가 모자라면 `8013` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 대표 캐릭터 해제 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/unmain]
+
+아이팡 대표 캐릭터 지정을 해제한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 장비 장착 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/equip/inventory/equipments/{ipangEquipmentInventoryId}]
+
+아이팡 캐릭터에 장비를 장착한다.
+
+캐릭터와 장비 각각에 대해 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+    + ipangEquipmentInventoryId: 19 (number) - 장비 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    회원의 다른 캐릭터에 이미 장착된 장비라면 `8009` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 캐릭터 장비 장착 해제 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/unequip/inventory/equipments/{ipangEquipmentInventoryId}]
+
+아이팡 캐릭터에 장착된 장비를 장착 해제한다.
+
+캐릭터와 장비 각각에 대해 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+    + ipangEquipmentInventoryId: 19 (number) - 장비 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 장비 부위 지정 장착 해제 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/unequip]
+
+아이팡 캐릭터에 장착된 장비를 부위를 지정하여 장착 해제한다.
+
+아이팡 캐릭터ID가 아니라 캐릭터 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (IpangEquipmentType)
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 장비 장착 전부 해제 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/unequip-all]
+
+아이팡 캐릭터에 장착된 장비를 전부 장착 해제한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 판매 [POST /ipang/inventory/characters/{ipangCharacterInventoryId}/sell]
+
+아이팡 캐릭터를 판매한다. 
+
+아이팡 캐릭터ID가 아니라 캐릭터 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 19 (number) - 판매 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    판매할 수 없는 캐릭터일 경우 `8008` 에러를 반환한다. (fixed 속성이 true일 경우)
+
+    + Attributes (ConflictError)
+
+### 아이팡 장비 판매 [POST /ipang/inventory/equipments/{ipangEquipmentInventoryId}/sell]
+
+아이팡 장비를 판매한다. 
+
+아이팡 장비ID가 아니라 장비 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangEquipmentInventoryId: 19 (number) - 판매 장비 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 201 (application/json)
+    + Headers
+
+            Location: RESOURCE_URL
+
+    + Attributes (WalnutTransaction)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+## 아이팡 룸 [/ipang/members/{memberId}/room]
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
+### 아이팡 룸 조회 [GET]
+
+특정 회원의 아이팡 룸 정보를 조회한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + memberId: 17 (number) - 회원ID
+
++ Request
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 200 (application/json)
+    + Attributes (IpangRoomInfo)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 룸 위치 변경 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/room-position]
+
+아이팡 캐릭터의 아이팡 룸 상에서의 위치를 변경한다.
+
+아이팡 캐릭터ID가 아니라 캐릭터 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (PositionInfo)
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 캐릭터 룸 방향 변경 [PUT /ipang/inventory/characters/{ipangCharacterInventoryId}/room-direction]
+
+아이팡 캐릭터의 아이팡 룸 상에서의 방향을 변경한다.
+
+아이팡 캐릭터ID가 아니라 캐릭터 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangCharacterInventoryId: 17 (number) - 캐릭터 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
+    + Attributes (DirectionType)
+
++ Response 204
+
++ Response 400 (application/json)
+    + Attributes (BadRequestError)
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 룸스킨 변경 [PUT /ipang/inventory/room-skins/{ipangRoomSkinInventoryId}/equip]
+
+아이팡 룸스킨을 변경한다.
+
+룸스킨ID가 아니라 룸스킨 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangRoomSkinInventoryId: 17 (number) - 룸스킨 인벤토리ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+### 아이팡 스티커 부착 [POST /ipang/inventory/stickers/{ipangStickerInventoryId}/post/members/{receiverId}]
+
+아이팡 스티커를 상대방의 룸에 부착한다.
+
+아이팡 스티커 ID가 아니라 인벤토리ID를 지정해줘야 한다는 점에 유의.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangStickerInventoryId: 17 (number) - 스티커 인벤토리ID
+    + receiverId: 19 (number) - 부착당할 회원ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
++ Response 409 (application/json)
+
+    한 사람에게 하루 5개 이상의 스티커를 부착했다면 `8010` 에러를 반환한다.
+
+    + Attributes (ConflictError)
+
+### 아이팡 부착 스티커 삭제 [DELETE /ipang/sticker-posts/{ipangStickerPostId}]
+
+룸에 부착된 아이팡 스티커를 삭제한다.
+
+::: note
+## 권한
+`USER`
+:::
+
++ Parameters
+    + ipangStickerPostId: 17 (number) - 부착된 스티커ID
+
++ Request (application/json)
+    + Headers
+
+            X-Auth-Token: AUTH_TOKEN
+
++ Response 204
+
++ Response 401 (application/json)
+    + Attributes (UnauthorizedError)
+
++ Response 403 (application/json)
+    + Attributes (ForbiddenError)
+
++ Response 404 (application/json)
+    + Attributes (NoResourceError)
+
+# Data Structures
+
+## PositionInfo (object)
+- x: 100 (number) - X좌표
+- y: 100 (number) - Y좌표
+
+## DirectionType (enum)
+- LEFT
+- RIGHT
+- UP
+- DOWN
+
+## IpangEmotionType (enum)
+- CALM
+- JOYFUL
+- SAD
+- ANGRY
+- SHOCKED
+
+## IpangEquipmentType (enum)
+- EQUIPMENT_1
+- EQUIPMENT_2
+- EQUIPMENT_3
+- EQUIPMENT_4
+- EQUIPMENT_5
+- EQUIPMENT_6
+
+## IpangActivityInfo (object)
+- level: 2 (number) - 활동레벨
+- exp: 100 (number) - 활동레벨 도달 경험치
+- title: 새싹 (string) - 활동레벨 타이틀
+- characterInventorySize: 30 (number) - 활동레벨 도달시 주어지는 캐릭터 인벤토리 크기
+- equipmentInventorySize: 30 (number) - 활동레벨 도달시 주어지는 장비 인벤토리 크기
+
+## IpangProfileInfo (object)
+- message: 아이팡 메시지 (string) 
+- emotion (IpangEmotionType)
+- walnuts: 1000 (number) - 보유 호두수
+- activityLevel: 2 (number) - 아이팡 활동레벨
+- exp: 1000 (number) - 경험치
+- ranking: 10 (number) - 아이팡 전체 랭킹
+- popularityPoint: 10 (number) - 인기도
+- famousPoint: 10 (number) - 유명도
+- learningPoint: 10 (number) - 학습도
+- playPoint: 10 (number) - 놀이도
+- stickerCount: 100 (number) - 받은 스티커 누적수
+- roomVisitCount: 100 (number) - 아이팡 룸 방문수
+- friendRequestCount: 100 (number) - 친구 요청수
+- friendAcceptCount: 100 (number) - 친구 승낙수
+- charcterInventoryLimit: 30 (number) - 캐릭터 인벤토리 개수
+- equipmentInventoryLimit: 30 (number) - 장비 인벤토리 개수
+
+## IpangCharacterInfo (WalnutItemInfo)
+- areaType: NS (string) - 영역 타입
+- rune: 1 (number) - 룬 등급
+- minHp: 10 (number) - 최소 체력
+- maxHp: 20 (number) - 최대 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+
+## IpangCharacterBase (WalnutItemBase)
+- areaType: NS (string) - 영역 타입
+- rune: 1 (number) - 룬 등급
+- minHp: 10 (number) - 최소 체력
+- maxHp: 20 (number) - 최대 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+
+## IpangRoomSkinInfo (WalnutItemInfo)
+
+## IpangRoomSkinBase (WalnutItemBase)
+
+## IpangStickerInfo (WalnutItemInfo)
+
+## IpangStickerBase (WalnutItemBase)
+
+## IpangSlotInfo (WalnutItemInfo)
+- slotType (enum) - 슬롯 타입
+    - CHARACTER_SLOT
+    - EQUIPMENT_SLOT
+- size: 10 (number) - 슬롯 크기  
+
+## IpangSlotBase (WalnutItemBase)
+- slotType (enum) - 슬롯 타입
+    - CHARACTER_SLOT
+    - EQUIPMENT_SLOT
+- size: 10 (number) - 슬롯 크기  
+
+## IpangEquipmentInfo (WalnutItemInfo)
+- areaType: NS (string) - 영역 타입
+- equipmentType (IpangEquipmentType) - 장비 타입
+- rune: 1 (number) - 룬 등급
+- hp: 10 (number) - 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+
+## IpangEquipmentBase (WalnutItemBase)
+- areaType: NS (string) - 영역 타입
+- equipmentType (IpangEquipmentType) - 장비 타입
+- rune: 1 (number) - 룬 등급
+- hp: 10 (number) - 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+
+## IpangCharacterInventoryInfo (object)
+- id: 17 (number) - 아이팡 캐릭터 인벤토리ID
+- ipangCharacterId: 19 (number) - 아이팡 캐릭터ID
+- slotNumber: 1 (number) - 슬롯 번호
+- roomDirection (DirectionType) - 아이팡 룸 방향
+- roomX: 100 (number) - 아이팡 룸 가로 위치
+- roomY: 100 (number) - 아이팡 룸 세로 위치
+- mainCharacter: true (boolean) - 메인 캐릭터 여부
+- fixed: true (boolean) - 매입 가능 여부
+- areaType: NS (string) - 영역 타입
+- rune: 1 (number) - 룬 등급
+- hp: 100 (number) - 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+- name: 더기 (string) - 아이템 이름
+- detail: 캐릭터 (string) - 아이템 설명
+- url: `http://thinkmath.co.kr/file.zip` (string) - 연결파일URL
+- thumbnail: `http://thinkmath.co.kr/thumb1.png` (optional, string) - 연결파일 섬네일
+- equipments (array[IpangEquipmentInventoryInfo]) - 장착 장비 목록
+
+## IpangRoomSkinInventoryInfo (object)
+- id: 17 (number) - 아이팡 룸스킨 인벤토리ID
+- ipangRoomSkinId: 19 (number) - 아이팡 룸스킨ID
+- slotNumber: 1 (number) - 슬롯 번호
+- equipped: true (boolean) - 룸스킨 사용여부
+- name: 우주배경 (string) - 아이템 이름
+- detail: 룸스킨 (string) - 아이템 설명
+- url: `http://thinkmath.co.kr/file.zip` (string) - 연결파일URL
+- thumbnail: `http://thinkmath.co.kr/thumb1.png` (optional, string) - 연결파일 섬네일
+
+## IpangStickerInventoryInfo (object)
+- id: 17 (number) - 아이팡 스티커 인벤토리ID
+- ipangStickerId: 19 (number) - 아이팡 스티커ID
+- slotNumber: 1 (number) - 슬롯 번호
+- count: 10 - 스티커 개수
+- name: 하트 (string) - 아이템 이름
+- detail: 스티커 (string) - 아이템 설명
+- url: `http://thinkmath.co.kr/file.zip` (string) - 연결파일URL
+- thumbnail: `http://thinkmath.co.kr/thumb1.png` (optional, string) - 연결파일 섬네일
+
+## IpangEquipmentInventoryInfo (object)
+- id: 17 (number) - 아이팡 장비 인벤토리ID
+- ipangEquipmentId: 19 (number) - 아이팡 장비ID
+- slotNumber: 1 (number) - 슬롯 번호
+- equipmentType (IpangEquipmentType) - 장비 타입
+- rune: 1 (number) - 룬 등급
+- hp: 10 (number) - 체력
+- ability: 0 (number) - 능력
+- specialAbility1: 0 (number) - 특수능력1
+- specialAbility2: 0 (number) - 특수능력2
+- specialAbility3: 0 (number) - 특수능력3
+- luck: 0 (number) - 행운
+- name: 바주카포 (string) - 아이템 이름
+- detail: 장비 (string) - 아이템 설명
+- url: `http://thinkmath.co.kr/file.zip` (string) - 연결파일URL
+- thumbnail: `http://thinkmath.co.kr/thumb1.png` (optional, string) - 연결파일 섬네일
+
+## IpangStickerPostInfo (object)
+- id: 17 (number) - 아이팡 스티커 전송ID
+- sender (MemberSummary) - 전송자 정보
+- receiver (MemberSummary) - 수신자 정보
+- deleted: false (boolean) - 삭제 여부
+- name: 하트 (string) - 아이템 이름
+- detail: 스티커 (string) - 아이템 설명
+- url: `http://thinkmath.co.kr/file.zip` (string) - 연결파일URL
+- thumbnail: `http://thinkmath.co.kr/thumb1.png` (optional, string) - 연결파일 섬네일
+- createDate: `2016-12-31T12:00:00Z` (string) - 생성일
+
+## IpangRoomStickerInfo (object)
+- stickerPostId: 17 (number) - 아이팡 스티커 전송ID
+- url: `http://thinkmath.co.kr/sticker.png` (string) - 스티커 파일URL
+- count: 30 (number) - 부착된 스티커 개수
+
+## IpangRoomInfo (object)
+- member (MemberSummary) - 룸 소유 회원 정보
+- ipangProfile (IpangProfileInfo) - 룸 소유 회원 아이팡 프로필
+- roomSkinUrl: `http://thinkmath.co.kr/roomskin.png` (string) - 룸스킨 파일URL
+- stickers (array[IpangRoomStickerInfo]) - 부착 스티커 목록 
+- characters (array[IpangCharacterInventoryInfo]) - 아이팡 룸 메인 캐릭터 목록
