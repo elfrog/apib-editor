@@ -5,8 +5,8 @@
   "main": "dist/app.js",
   "scripts": {
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
-    "build": "babel src -d build",
-    "start": "npm run build && node build/index.js"
+    "dev": "webpack-dev-server --content-base build/",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -26,10 +26,16 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-polyfill": "^6.23.0",
     "babel-preset-env": "^1.4.0",
-    "mocha": "^3.4.1"
+    "css-loader": "^0.28.1",
+    "less": "^2.7.2",
+    "less-loader": "^4.0.3",
+    "mocha": "^3.4.1",
+    "style-loader": "^0.17.0",
+    "webpack": "^2.5.1",
+    "webpack-dev-server": "^2.4.5"
   },
-  "dependencies": {
-    "babel-polyfill": "^6.23.0"
-  }
+  "dependencies": {}
 }
