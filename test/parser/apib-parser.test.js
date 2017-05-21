@@ -1,6 +1,6 @@
 import assert from 'assert';
-import ApiBlueprintParser from '../../src/parser/api-blueprint-parser';
-import { ResourceNode, NodeTypes, NodeActions } from '../../src/parser/resource-node';
+import ApibParser from '../../src/parser/apib-parser';
+import { ResourceGroupNode, ResourceNode, ActionNode, NodeActions } from '../../src/parser/apib-node';
 
 const TEST_TEXT = `
 This is test api-blueprint source.
@@ -47,23 +47,23 @@ This is api-blueprint source for test errors.
 It should throw an error.
 `;
 
-describe('ApiBlueprintParser', () => {
+describe('ApibParser', () => {
   it('should parse correctly', async () => {
-    let parser = new ApiBlueprintParser();
+    let parser = new ApibParser();
     let root = await parser.parse(TEST_TEXT);
 
     assert.equal(root.children.length, 3);
-    assert.equal(root.children[1].type, NodeTypes.GROUP);
+    assert.ok(root.children[1] instanceof ResourceGroupNode);
     assert.equal(root.children[1].children.length, 1);
     assert.equal(root.children[1].children[0].children.length, 2);
-    assert.equal(root.children[1].children[0].type, NodeTypes.RESOURCE);
-    assert.equal(root.children[1].children[0].children[1].type, NodeTypes.ACTION);
+    assert.ok(root.children[1].children[0] instanceof ResourceNode);
+    assert.ok(root.children[1].children[0].children[1] instanceof ActionNode);
     assert.equal(root.children[2].children[0].action, NodeActions.GET);
     assert.equal(root.children[2].children[0].url, '/resource2');
   });
 
   it('should throw an error when parsing without resource definition', (done) => {
-    let parser = new ApiBlueprintParser();
+    let parser = new ApibParser();
 
     parser.parse(WITHOUT_RESOURCE_DEFINITION_TEXT).then(() => {
       done('error');
@@ -73,7 +73,7 @@ describe('ApiBlueprintParser', () => {
   });
 
   it('should throw an error when parsing unsupported method', (done) => {
-    let parser = new ApiBlueprintParser();
+    let parser = new ApibParser();
 
     parser.parse(UNSUPPORTED_METHOD_TEXT).then(() => {
       done('error');

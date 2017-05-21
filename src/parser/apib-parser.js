@@ -1,9 +1,28 @@
-import { ResourceNode, NodeTypes, NodeActions } from './resource-node';
+import {
+  PackageNode,
+  ResourceGroupNode,
+  ModelGroupNode,
+  ResourceNode,
+  ModelNode,
+  ActionNode,
+  NodeActions
+} from './apib-node';
 
-export default class ApiBlueprintParser {
+export default class ApibParser {
+  constructor() {
+    this.nodeClasses = [
+      ActionNode,
+      ModelNode,
+      ResourceNode,
+      ModelGroupNode,
+      ResourceGroupNode,
+      PackageNode
+    ];
+  }
+
   async parse(markdownString) {
     let lines = markdownString.split(/\r?\n/);
-    let root = new ResourceNode();
+    let root = new PackageNode();
 
     let parsingNote = false;
     let node = root;

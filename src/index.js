@@ -4,9 +4,9 @@ import ReactDOM from 'react-dom';
 import './styles/main.less';
 import apiData from 'raw-loader!./api-data.apib';
 
-import ApiBlueprintParser from './parser/api-blueprint-parser';
+import ApibParser from './parser/apib-parser';
 
-let parser = new ApiBlueprintParser();
+let parser = new ApibParser();
 
 function renderNode(node) {
   let elem = <div className='apib-node'>

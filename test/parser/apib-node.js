@@ -1,12 +1,12 @@
 import assert from 'assert';
 
-import { ResourceNode } from '../../src/parser/resource-node';
+import { ApibNode } from '../../src/parser/apib-node';
 
-describe('ResourceNode', () => {
+describe('ApibNode', () => {
   it('should add children correctly', () => {
-    let parent = new ResourceNode();
-    let child1 = new ResourceNode();
-    let child2 = new ResourceNode();
+    let parent = new ApibNode();
+    let child1 = new ApibNode();
+    let child2 = new ApibNode();
 
     parent.addChild(child1);
     parent.addChild(child2);
@@ -17,9 +17,9 @@ describe('ResourceNode', () => {
   });
 
   it('should remove children correctly', () => {
-    let parent = new ResourceNode();
-    let child1 = new ResourceNode();
-    let child2 = new ResourceNode();
+    let parent = new ApibNode();
+    let child1 = new ApibNode();
+    let child2 = new ApibNode();
 
     parent.addChild(child1);
     parent.addChild(child2);
@@ -31,12 +31,12 @@ describe('ResourceNode', () => {
   });
 
   it('should add children owned by another parent correctly', () => {
-    let parent1 = new ResourceNode();
-    let parent2 = new ResourceNode();
-    let child1 = new ResourceNode();
-    let child2 = new ResourceNode();
+    let parent1 = new ApibNode();
+    let parent2 = new ApibNode();
+    let child1 = new ApibNode();
+    let child2 = new ApibNode();
 
-    parent1.addChild(child1);
+    parent1.addChild(child2);
     parent2.addChild(child2);
     parent2.addChild(child1);
 
