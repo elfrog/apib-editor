@@ -1,6 +1,8 @@
 import assert from 'assert';
 import ApibParser from '../../src/parser/apib-parser';
-import { ResourceGroupNode, ResourceNode, ActionNode, NodeActions } from '../../src/parser/apib-node';
+import ResourceGroupNode from '../../src/parser/resource-group-node';
+import ResourceNode from '../../src/parser/resource-node';
+import ActionNode from '../../src/parser/action-node';
 
 const TEST_TEXT = `
 This is test api-blueprint source.
@@ -34,16 +36,18 @@ blah blah...
 `;
 
 const WITHOUT_RESOURCE_DEFINITION_TEXT = `
+# Without Resource Definition
 This is api-blueprint source for test errors.
 
-# Without resource definition [GET]
+## Without resource definition [GET]
 It should throw an error.
 `; 
 
 const UNSUPPORTED_METHOD_TEXT = `
+# Unsupported Method
 This is api-blueprint source for test errors.
 
-# Resource with unsupported method [PUNCH /resource]
+## Resource with unsupported method [PUNCH /resource]
 It should throw an error.
 `;
 
@@ -58,7 +62,7 @@ describe('ApibParser', () => {
     assert.equal(root.children[1].children[0].children.length, 2);
     assert.ok(root.children[1].children[0] instanceof ResourceNode);
     assert.ok(root.children[1].children[0].children[1] instanceof ActionNode);
-    assert.equal(root.children[2].children[0].action, NodeActions.GET);
+    assert.equal(root.children[2].children[0].action, 'GET');
     assert.equal(root.children[2].children[0].url, '/resource2');
   });
 

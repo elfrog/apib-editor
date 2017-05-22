@@ -1,10 +1,3 @@
-export const NodeActions = {
-  GET: 'GET',
-  POST: 'POST',
-  DELETE: 'DELETE',
-  PUT: 'PUT',
-  OPTIONS: 'OPTIONS'
-};
 
 let nodeIdCounter = 1;
 
@@ -23,17 +16,25 @@ let nodeIdCounter = 1;
  * 
  * So ModelNode and ActionNode become terminal nodes.
  */
-export class ApibNode {
-  constructor(depth = 0) {
+export default class ApibNode {
+  constructor() {
     this.id = nodeIdCounter++;
     this.parent = null;
     this.children = [];
-    this.depth = depth;
-    this.header = '';
-    this.url = '';
-    this.action = '';
+    this.depth = 0;
+    this._header = '';
+    this.name = '';
     this.lines = [];
     this._description = null;
+  }
+
+  get header() {
+    return this._header;
+  }
+
+  set header(value) {
+    this._header = value;
+    this.name = value;
   }
 
   get description() {
@@ -125,85 +126,5 @@ export class ApibNode {
     }
 
     return null;
-  }
-}
-
-export class PackageNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return true;
-  }
-
-  static createFromHeader(header) {
-    let node = new PackageNode();
-    node.header = header;
-    return node;
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof PackageNode) ||
-        !(child instanceof ResourceGroupNode) ||
-        !(child instanceof ModelGroupNode)
-    ) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
-  }
-}
-
-export class ResourceGroupNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return header.trim().indexOf('Group') === 0;
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ResourceNode) ||
-        !(child instanceof ModelGroupNode) ||
-        !(child instanceof ActionNode)
-    ) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
-  }
-}
-
-export class ResourceNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return true;
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ActionNode)) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
-  }
-}
-
-export class ModelGroupNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return header.trim().indexOf('Data Structures') === 0;
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ModelNode)) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
-  }
-}
-
-export class ModelNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return /\S+ \(\S+\)/.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    throw new Error('Model node is a terminal node that doesn\'t accept any children.');
-  }
-}
-
-export class ActionNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return /.+ \[.+\]/.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    throw new Error('Action node is a terminal node that doesn\'t accept any children.');
   }
 }

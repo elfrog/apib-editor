@@ -1,12 +1,9 @@
-import {
-  PackageNode,
-  ResourceGroupNode,
-  ModelGroupNode,
-  ResourceNode,
-  ModelNode,
-  ActionNode,
-  NodeActions
-} from './apib-node';
+import PackageNode from './package-node';
+import ResourceGroupNode from './resource-group-node';
+import ModelGroupNode from './model-group-node';
+import ResourceNode from './resource-node';
+import ModelNode from './model-node';
+import ActionNode from './action-node';
 
 export default class ApibParser {
   constructor() {
@@ -33,9 +30,11 @@ export default class ApibParser {
         let header = line.substring(depth + 1, line.length);
         let parent = node.findRecentParent(depth);
 
-        node = new ResourceNode(depth);
+        let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(header));
+        node = new nodeClass();
+        node.depth = depth;
+        node.header = header;
         parent.addChild(node);
-        this.parseHeader(node, header);
       } else if (line.trim().indexOf(':::') === 0) {
         parsingNote = !parsingNote;
         node.lines.push(line);
@@ -45,55 +44,5 @@ export default class ApibParser {
     }
 
     return root;
-  }
-
-  parseHeader(node, header) {
-    if (header.indexOf('Group') === 0) {
-      node.type = NodeTypes.GROUP
-      node.header = header.substring(6, header.length);
-      return;
-    }
-
-    if (header.indexOf('Data Structures') === 0) {
-      node.type = NodeTypes.MODELS;
-      node.header = 'Models';
-      return;
-    }
-
-    let endpointRegex = /(.+)\[(.+)\]/;
-    let result = endpointRegex.exec(header);
-
-    if (result) {
-      node.header = result[1];
-
-      let url = result[2];
-      let urlSplits = url.split(' ');
-
-      if (urlSplits.length === 1) {
-        if (url in NodeActions) {
-          node.type = NodeTypes.ACTION;
-          node.action = url;
-
-          if (!node.parent || !node.parent.url) {
-            throw new Error('Resource is not defined.');
-          }
-
-          node.url = node.parent.url;
-        } else {
-          node.type = NodeTypes.RESOURCE;
-          node.url = url;
-        }
-      } else {
-        if (!(urlSplits[0] in NodeActions)) {
-          throw new Error('Unsupported action type: ' + urlSplits[0]);
-        }
-
-        node.type = NodeTypes.ACTION;
-        node.action = urlSplits[0];
-        node.url = urlSplits[1];
-      }
-    } else {
-      node.header = header;
-    }
   }
 }

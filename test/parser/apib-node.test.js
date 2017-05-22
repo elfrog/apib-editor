@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { ApibNode } from '../../src/parser/apib-node';
+import ApibNode from '../../src/parser/apib-node';
 
 describe('ApibNode', () => {
   it('should add children correctly', () => {
