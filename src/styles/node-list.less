@@ -11,10 +11,7 @@
   bottom: 0;
   overflow-x: hidden;
   overflow-y: auto;
-
-  * {
-    background-color: transparent;
-  }
+  background-color: darken(@body-color, 2%);
 }
 
 .apib-node-item {
@@ -24,14 +21,14 @@
   margin: 0;
   white-space: nowrap;
 
-  &.active {
-    background-color: @body-highlight-color;
-    color: @primary-text-color;
-  }
-  
   &:hover {
     background-color: @body-highlight-color;
     cursor: pointer;
+  }
+
+  &.active {
+    background-color: lighten(@body-highlight-color, 5%);
+    color: @primary-text-color;
   }
 }
 

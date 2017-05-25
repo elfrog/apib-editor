@@ -28,6 +28,7 @@ export default class NodeItem extends React.Component {
     let elem = <div
         className={'apib-node-item' + (this.props.active ? ' active' : '')}
         onClick={this.onItemClick}
+        title={node.name}
       >
       <div className='apib-node-depth-spaces'>
         {depthSpaces}

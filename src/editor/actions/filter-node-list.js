@@ -3,7 +3,7 @@ const FILTER_DELAY = 300;
 
 // parents are also included if at least one of their children included.
 function filterAndFlattenNode(node, filterValue) {
-  let test = node.name.indexOf(filterValue) >= 0;
+  let test = node.name.toLowerCase().indexOf(filterValue.toLowerCase()) >= 0;
   let list = test ? [node] : [];
 
   for (let child of node.children) {
