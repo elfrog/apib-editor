@@ -1,0 +1,54 @@
+
+.apib-node-list {
+  overflow: hidden;
+}
+
+.apib-node-list-items {
+  position: absolute;
+  top: @unit-height;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  * {
+    background-color: transparent;
+  }
+}
+
+.apib-node-item {
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+
+  &.active {
+    background-color: @body-highlight-color;
+    color: @primary-text-color;
+  }
+  
+  &:hover {
+    background-color: @body-highlight-color;
+    cursor: pointer;
+  }
+}
+
+.apib-node-header {
+  display: inline-block;
+}
+
+.apib-node-depth-spaces {
+  display: inline-block;
+}
+
+.apib-node-depth-space {
+  display: inline-block;
+  width: 16px;
+}
+
+.apib-node-list-filter {
+  width: 100%;
+  padding: 0 5px;
+}

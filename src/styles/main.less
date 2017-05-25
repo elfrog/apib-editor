@@ -1,25 +1,52 @@
 @import './reset';
 @import './variables';
+@import './panel';
+@import './node-list';
+@import './node-editor';
 
-.apib-node-list {
-  position: absolute;
+html {
+  background-color: @body-color;
+  color: @body-text-color;
+  font-size: 14px;
+
+  a, a:active, a:visited {
+    text-decoration: none;
+    color: @primary-text-color;
+  }
+}
+
+input {
+  border: 1px solid @secondary-text-color;
+  border-radius: 0;
+  height: @unit-height;
+}
+
+.apib-editor {
+  display: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  overflow-y: auto;
 }
 
-.apib-node-item {
-  padding: 0;
-  margin: 5px;
-  font-size: 14px;
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: @unit-height / 2;
+  height: @unit-height / 2;
 }
 
-.apib-node-header {
-  
+::-webkit-scrollbar-track {
+  background-color: @body-color;
+  border-radius: 0;
 }
 
-.apib-node-children {
-  margin: 5px;
+::-webkit-scrollbar-thumb {
+  background-color: @secondary-text-color;
+  border: 1px solid @secondary-text-color;
+  border-radius: 0;
+
+  &:hover, &:active {
+    border: 1px solid @blue;
+    background-color: @blue;
+  }
 }
