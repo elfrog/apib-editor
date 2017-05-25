@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports = {
-  entry: ['babel-polyfill', './src/index.js'],
+  entry: ['babel-polyfill', './src/index.jsx'],
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'app.js'
@@ -20,5 +20,6 @@ module.exports = {
         use: ['style-loader', 'css-loader', 'less-loader']
       }
     ]
-  }
+  },
+  devtool: 'inline-source-map'
 };
