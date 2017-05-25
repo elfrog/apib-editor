@@ -21,6 +21,8 @@ export default class ApibParser {
     let lines = markdownString.split(/\r?\n/);
     let root = new PackageNode();
 
+    root.name = 'Document';
+
     let parsingNote = false;
     let node = root;
 

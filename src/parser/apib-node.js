@@ -127,4 +127,14 @@ export default class ApibNode {
 
     return null;
   }
+
+  flatten() {
+    let list = [this];
+
+    for (let child of this.children) {
+      list = list.concat(child.flatten());
+    }
+
+    return list;
+  }
 }
