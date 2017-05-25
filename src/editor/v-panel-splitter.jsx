@@ -6,7 +6,7 @@ import Panel from './panel';
 import VSplitBar from './v-split-bar'
 
 const MIN_PANEL_SIZE = 50;
-const SPLIT_BAR_SIZE = 5;
+const SPLIT_BAR_SIZE = 3;
 
 export default class VPanelSplitter extends React.Component {
   static propTypes = {
@@ -60,6 +60,7 @@ export default class VPanelSplitter extends React.Component {
       <VSplitBar
         left={leftPanelSize}
         size={SPLIT_BAR_SIZE}
+        draggable={this.props.resizable}
         onPositionChange={this.onSplitterChange}
       />
 

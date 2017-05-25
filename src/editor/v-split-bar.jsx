@@ -62,8 +62,18 @@ export default class VSplitBar extends React.Component {
   }
 
   render() {
+    let classNames = ['v-split-bar'];
+
+    if (this.state.dragging) {
+      classNames.push('dragging');
+    }
+
+    if (this.props.draggable === false) {
+      classNames.push('disabled');
+    }
+
     return <div
-      className={'v-split-bar' + (this.state.dragging ? ' dragging' : '')}
+      className={classNames.join(' ')}
       style={{
         left: this.props.left + 'px',
         width: (this.props.size || 5) + 'px'
