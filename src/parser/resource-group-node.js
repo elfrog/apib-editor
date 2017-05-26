@@ -5,11 +5,10 @@ import ActionNode from './action-node';
 
 export default class ResourceGroupNode extends ApibNode {
   get header() {
-    return super.header;
+    return 'Group ' + super.header;
   }
 
   set header(value) {
-    super.header = value;
     this.name = value.substring(6, value.length);
   }
 

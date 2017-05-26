@@ -9,16 +9,14 @@ export default class ResourceNode extends ApibNode {
   }
 
   get header() {
-    return super.header;
+    return this.name + ' [' + this.url + ']';
   }
 
   set header(value) {
-    super.header = value;
-
     let endpointRegex = /(.+)\[(.+)\]/;
     let result = endpointRegex.exec(value);
 
-    this.name = result[1];
+    this.name = result[1].trim();
     this.url = result[2];
   }
 

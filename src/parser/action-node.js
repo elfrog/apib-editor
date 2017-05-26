@@ -4,30 +4,28 @@ export default class ActionNode extends ApibNode {
   constructor() {
     super();
 
-    this._url = '';
+    this.url = '';
     this.action = '';
   }
 
   get header() {
-    return super.header;
+    if (this.url) {
+      return this.name + ' [' + this.action + ' ' + this.url + ']';
+    }
+
+    return this.name + ' [' + this.action + ']';
   }
 
   set header(value) {
-    super.header = value;
-
     let actionRegex = /(.+)\[(GET|POST|DELETE|PUT|UPDATE)\s?(.*)\]/;
     let result = actionRegex.exec(value);
 
-    this.name = result[1];
+    this.name = result[1].trim();
     this.action = result[2];
-    this._url = result[3];
+    this.url = result[3];
   }
 
-  get url() {
-    if (this._url) {
-      return this._url;
-    }
-
+  get urlInherited() {
     if (!this.parent || !this.parent.url) {
       throw new Error('Resource is not defined.');
     }

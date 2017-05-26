@@ -8,12 +8,14 @@ export default class ModelNode extends ApibNode {
   }
 
   get header() {
-    return super.header;
+    if (this.modelType) {
+      return this.name + ' (' + this.modelType + ')';
+    }
+
+    return this.name;
   }
 
   set header(value) {
-    super.header = value;
-
     let result = /(\S+) \(\S+\)/.exec(value);
 
     this.name = result[1];
