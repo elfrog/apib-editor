@@ -1,4 +1,5 @@
 var path = require('path');
+var webpack = require('webpack');
 
 module.exports = {
   entry: ['babel-polyfill', './src/index.jsx'],
@@ -21,5 +22,14 @@ module.exports = {
       }
     ]
   },
-  devtool: 'inline-source-map'
+  devtool: 'inline-source-map',
+  devServer: {
+    hot: true,
+    contentBase: path.resolve(__dirname, 'build'),
+    publicPath: '/'
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NamedModulesPlugin()
+  ]
 };
