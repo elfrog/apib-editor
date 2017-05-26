@@ -1,6 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import {
+  FaBook, FaCube, FaFolderOpen, FaDatabase, FaCaretDown, FaMinus,
+  FaArrowCircleDown, FaPlusCircle, FaTimesCircle, FaArrowCircleUp
+} from 'react-icons/fa';
+
+import PackageNode from '../../parser/package-node';
+import ResourceGroupNode from '../../parser/resource-group-node';
+import ModelGroupNode from '../../parser/model-group-node';
+import ResourceNode from '../../parser/resource-node';
+import ActionNode from '../../parser/action-node';
+import ModelNode from '../../parser/model-node';
+
 export default class NodeItem extends React.Component {
   static propTypes = {
     node: PropTypes.any.isRequired,
@@ -17,12 +29,40 @@ export default class NodeItem extends React.Component {
     }
   }
 
+  getIconByNodeType(node) {
+    if (node.parent === null) {
+      return <FaBook />;
+    } else if (node instanceof PackageNode) {
+      return <FaCube />
+    } else if (node instanceof ResourceGroupNode) {
+      return <FaFolderOpen />
+    } else if (node instanceof ResourceNode) {
+      return <FaCaretDown />
+    } else if (node instanceof ModelGroupNode) {
+      return <FaDatabase />
+    } else if (node instanceof ActionNode) {
+      switch (node.action) {
+      case 'GET': return <FaArrowCircleDown />;
+      case 'POST': return <FaPlusCircle />;
+      case 'PUT': return <FaArrowCircleUp />;
+      case 'DELETE': return <FaTimesCircle />;
+      }
+    }
+
+    return <FaMinus />;
+  }
+
   render() {
     let node = this.props.node;
     let depthSpaces = [];
+    let iconElement = this.getIconByNodeType(node);
 
     for (let i = 0; i < node.depth; i++) {
-      depthSpaces.push(<div key={i} className='apib-node-depth-space' />);
+      depthSpaces.push(
+        <div key={i} className='apib-node-depth-space'>
+          <div className='apib-node-depth-space-bar' />
+        </div>
+      );
     }
 
     let elem = <div
@@ -33,6 +73,12 @@ export default class NodeItem extends React.Component {
       <div className='apib-node-depth-spaces'>
         {depthSpaces}
       </div>
+
+      {node instanceof ActionNode ? 
+        <div className={'apib-node-header-icon action-' + node.action.toLowerCase()}>{iconElement}</div> :
+        <div className='apib-node-header-icon'>{iconElement}</div>
+      }
+
       <div className='apib-node-header'>
         {node.name}
       </div>
