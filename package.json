@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
-    "dev": "webpack-dev-server --content-base build/",
+    "dev": "webpack-dev-server",
     "build": "webpack"
   },
   "repository": {
@@ -47,5 +47,7 @@
     "webpack": "^2.5.1",
     "webpack-dev-server": "^2.4.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react-icons": "^2.2.5"
+  }
 }
