@@ -1,12 +1,15 @@
 @import './reset';
 @import './variables';
 @import './panel';
+@import './property-view';
+@import './property-control';
 @import './node-list';
 @import './node-editor';
 
 html {
   background-color: @body-color;
   color: @body-text-color;
+  font-family: Consolas;
   font-size: 14px;
 
   a, a:active, a:visited {
@@ -15,7 +18,9 @@ html {
   }
 }
 
-input {
+input, select {
+  font-family: Consolas;
+  font-size: 14px;
   height: @unit-height;
   border: 0;
   border-radius: 0;
@@ -24,11 +29,12 @@ input {
 }
 
 .apib-editor {
-  display: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  .full-layout();
+}
+
+.apib-editor-message {
+  .full-layout();
+  margin: @unit-margin;
 }
 
 ::-webkit-scrollbar {
