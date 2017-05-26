@@ -3,10 +3,29 @@ import PropTypes from 'prop-types';
 
 import NodeItem from './node-item';
 
+const FILTER_DELAY = 300;
+
+// parents are also included if at least one of their children included.
+function filterAndFlattenNode(node, filterValue) {
+  let test = node.name.toLowerCase().indexOf(filterValue.toLowerCase()) >= 0;
+  let list = test ? [node] : [];
+
+  for (let child of node.children) {
+    list = list.concat(filterAndFlattenNode(child, filterValue));
+  }
+
+  if (!test && list.length > 0) {
+    list.unshift(node);
+  }
+
+  return list;
+}
+
 export default class NodeList extends React.Component {
   static propTypes = {
-    nodeList: PropTypes.array.isRequired,
+    rootNode: PropTypes.any,
     activeNode: PropTypes.any,
+    filter: PropTypes.string,
     onFilter: PropTypes.func,
     onSelect: PropTypes.func
   };
@@ -14,15 +33,24 @@ export default class NodeList extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      filterText: ''
-    };
+    this.filterTimer = null;
   }
 
   onFilterTextChanged = e => {
+    if (!this.props.onFilter) {
+      return;
+    }
+
+    if (this.filterTimer) {
+      clearTimeout(this.filterTimer);
+    }
+
     let value = e.target.value;
-    this.setState({ filterText: value });
-    this.props.onFilter(value);
+
+    this.filterTimer = setTimeout(() => {
+      this.props.onFilter(value);
+      this.filterTimer = null;
+    }, FILTER_DELAY);
   }
 
   onItemSelect = (node) => {
@@ -32,7 +60,9 @@ export default class NodeList extends React.Component {
   }
 
   render() {
-    let nodeItems = this.props.nodeList.map(node => 
+    let nodeList = this.props.rootNode ?
+      (this.props.filter ? filterAndFlattenNode(this.props.rootNode, this.props.filter) : this.props.rootNode.flatten()) : [];
+    let nodeItems = nodeList.map(node => 
       <NodeItem key={node.id} node={node} active={node === this.props.activeNode} onClick={e => this.onItemSelect(node)} />
     );
 
