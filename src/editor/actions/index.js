@@ -2,15 +2,17 @@
 import loadNodeList from './load-node-list';
 import filterNodeList from './filter-node-list';
 import selectNode from './select-node';
+import changeNodeProperty from './change-node-property';
 
 export let actions = [
   loadNodeList,
   filterNodeList,
-  selectNode
+  selectNode,
+  changeNodeProperty
 ];
 
 export let initialState = {
   rootNode: null,
-  activeNode: null,
-  nodeList: []
+  activeNodeId: null,
+  nodeListFilter: ''
 };
