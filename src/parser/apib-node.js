@@ -1,4 +1,6 @@
 
+const HASH_HEADERS = ['', '#', '##', '###', '####', '#####', '######', '######', '########', '#########'];
+
 let nodeIdCounter = 1;
 
 /**
@@ -22,18 +24,16 @@ export default class ApibNode {
     this.parent = null;
     this.children = [];
     this.depth = 0;
-    this._header = '';
     this.name = '';
     this.lines = [];
     this._description = null;
   }
 
   get header() {
-    return this._header;
+    return this.name;
   }
 
   set header(value) {
-    this._header = value;
     this.name = value;
   }
 
@@ -47,6 +47,10 @@ export default class ApibNode {
 
   set description(value) {
     this._description = value;
+  }
+
+  get hashHeader() {
+    return HASH_HEADERS[this.depth];
   }
 
   checkAcceptableChild(child) {
@@ -112,6 +116,22 @@ export default class ApibNode {
     }
   }
 
+  findNodeById(id) {
+    if (this.id === id) {
+      return this;
+    }
+
+    for (let child of this.children) {
+      let node = child.findNodeById(id);
+
+      if (node) {
+        return node;
+      }
+    }
+
+    return null;
+  }
+
   findRecentParent(depth) {
     if (depth > this.depth) {
       return this;
@@ -136,5 +156,18 @@ export default class ApibNode {
     }
 
     return list;
+  }
+
+  clone() {
+    let node = new this.constructor();
+    Object.assign(node, this);
+
+    node.children = this.children.map(child => {
+      let childNode = child.clone();
+      childNode.parent = node;
+      return childNode;
+    });
+
+    return node;
   }
 }

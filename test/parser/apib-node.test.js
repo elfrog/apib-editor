@@ -1,6 +1,9 @@
 import assert from 'assert';
 
 import ApibNode from '../../src/parser/apib-node';
+import PackageNode from '../../src/parser/package-node';
+import ResourceGroupNode from '../../src/parser/resource-group-node';
+import ResourceNode from '../../src/parser/resource-node';
 
 describe('ApibNode', () => {
   it('should add children correctly', () => {
@@ -42,5 +45,28 @@ describe('ApibNode', () => {
 
     assert.equal(child1.parent, parent2);
     assert.equal(parent1.children.length, 0);
+  });
+
+  it('should clone itself and its children', () => {
+    let parent = new PackageNode();
+    let child1 = new ResourceGroupNode();
+    let child2 = new ResourceGroupNode();
+    let child3 = new ResourceNode();
+
+    parent.header = 'Test Package';
+    child1.header = 'Group ResourceGroup1';
+    child2.header = 'Group ResourceGroup2';
+    child3.header = 'Resource [GET]';
+
+    parent.addChild(child1);
+    parent.addChild(child2);
+    child1.addChild(child3);
+
+    let copy = parent.clone();
+
+    assert.notEqual(copy, parent);
+    assert.deepEqual(copy, parent);
+    assert.notEqual(copy.children[0], parent.children[0]);
+    assert.deepEqual(copy.children[0], parent.children[0]);
   });
 });
