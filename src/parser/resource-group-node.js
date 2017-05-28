@@ -4,16 +4,20 @@ import ModelGroupNode from './model-group-node';
 import ActionNode from './action-node';
 
 export default class ResourceGroupNode extends ApibNode {
+  static headerRegex = /^#* Group (.+)$/;
+
   get header() {
-    return 'Group ' + super.header;
+    return this.hashHeader + ' Group ' + this.name;
   }
 
   set header(value) {
-    this.name = value.substring(6, value.length);
+    let result = ResourceGroupNode.headerRegex.exec(value);
+
+    this.name = result[1];
   }
 
   static canAcceptHeader(header) {
-    return header.trim().indexOf('Group') === 0;
+    return ResourceGroupNode.headerRegex.test(header);
   }
 
   checkAcceptableChild(child) {

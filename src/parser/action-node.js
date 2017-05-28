@@ -1,6 +1,10 @@
 import ApibNode from './apib-node';
 
+export const SUPPORTED_ACTION_METHODS = ['GET', 'PUT', 'POST', 'DELETE', 'UPDATE'];
+
 export default class ActionNode extends ApibNode {
+  static headerRegex = /^#* (.+) \[([A-Z]+) ?(\S*)\]$/;
+
   constructor() {
     super();
 
@@ -10,15 +14,14 @@ export default class ActionNode extends ApibNode {
 
   get header() {
     if (this.url) {
-      return this.name + ' [' + this.action + ' ' + this.url + ']';
+      return this.hashHeader + ' ' + this.name + ' [' + this.action + ' ' + this.url + ']';
     }
 
-    return this.name + ' [' + this.action + ']';
+    return this.hashHeader + ' ' + this.name + ' [' + this.action + ']';
   }
 
   set header(value) {
-    let actionRegex = /(.+)\[(GET|POST|DELETE|PUT|UPDATE)\s?(.*)\]/;
-    let result = actionRegex.exec(value);
+    let result = ActionNode.headerRegex.exec(value);
 
     this.name = result[1].trim();
     this.action = result[2];
@@ -34,9 +37,19 @@ export default class ActionNode extends ApibNode {
   }
 
   static canAcceptHeader(header) {
-    let actionRegex = /.+\[(GET|POST|DELETE|PUT|UPDATE)\s?(.*)\]/;
-    
-    return actionRegex.test(header);
+    let result = ActionNode.headerRegex.exec(header);
+
+    if (!result) {
+      return false;
+    }
+
+    let action = result[2];
+
+    if (SUPPORTED_ACTION_METHODS.indexOf(action) < 0) {
+      throw new Error('Unsupported action method: ' + action);
+    }
+
+    return true;
   }
 
   checkAcceptableChild(child) {

@@ -29,13 +29,11 @@ export default class ApibParser {
     for (let line of lines) {
       if (!parsingNote && line[0] === '#') {
         let depth = line.indexOf(' ');
-        let header = line.substring(depth + 1, line.length);
         let parent = node.findRecentParent(depth);
-
-        let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(header));
+        let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(line));
         node = new nodeClass();
         node.depth = depth;
-        node.header = header;
+        node.header = line;
         parent.addChild(node);
       } else if (line.trim().indexOf(':::') === 0) {
         parsingNote = !parsingNote;

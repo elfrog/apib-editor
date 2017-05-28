@@ -53,10 +53,10 @@ describe('ApibNode', () => {
     let child2 = new ResourceGroupNode();
     let child3 = new ResourceNode();
 
-    parent.header = 'Test Package';
-    child1.header = 'Group ResourceGroup1';
-    child2.header = 'Group ResourceGroup2';
-    child3.header = 'Resource [GET]';
+    parent.header = '# Test Package';
+    child1.header = '## Group ResourceGroup1';
+    child2.header = '## Group ResourceGroup2';
+    child3.header = '### Resource [GET]';
 
     parent.addChild(child1);
     parent.addChild(child2);

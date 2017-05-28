@@ -3,10 +3,6 @@ import ResourceGroupNode from './resource-group-node';
 import ModelGroupNode from './model-group-node';
 
 export default class PackageNode extends ApibNode {
-  static canAcceptHeader(header) {
-    return true;
-  }
-
   checkAcceptableChild(child) {
     if (!(child instanceof PackageNode) &&
         !(child instanceof ResourceGroupNode) &&
@@ -14,5 +10,9 @@ export default class PackageNode extends ApibNode {
     ) {
       throw new Error('The given node is not acceptable for child.');
     } 
+  }
+
+  static canAcceptHeader(header) {
+    return ApibNode.headerRegex.test(header);
   }
 }

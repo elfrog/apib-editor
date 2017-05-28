@@ -2,6 +2,8 @@ import ApibNode from './apib-node';
 import ModelNode from './model-node';
 
 export default class ModelGroupNode extends ApibNode {
+  static headerRegex = /^#* Data Structures$/;
+
   get name() {
     return 'Data Structures';
   }
@@ -11,7 +13,7 @@ export default class ModelGroupNode extends ApibNode {
   }
 
   get header() {
-    return 'Data Structures';
+    return this.hashHeader + ' Data Structures';
   }
 
   set header(value) {
@@ -19,7 +21,7 @@ export default class ModelGroupNode extends ApibNode {
   }
 
   static canAcceptHeader(header) {
-    return header.trim().indexOf('Data Structures') === 0;
+    return ModelGroupNode.headerRegex.test(header);
   }
 
   checkAcceptableChild(child) {

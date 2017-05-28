@@ -1,7 +1,9 @@
 import ApibNode from './apib-node';
-import ActionNode from './action-node';
+import ActionNode, { ACTION_NODE_HEADER_REGEX } from './action-node';
 
 export default class ResourceNode extends ApibNode {
+  static headerRegex = /^#* (.+) \[(\S+)\]$/;
+
   constructor() {
     super();
 
@@ -9,29 +11,18 @@ export default class ResourceNode extends ApibNode {
   }
 
   get header() {
-    return this.name + ' [' + this.url + ']';
+    return this.hashHeader + ' ' + this.name + ' [' + this.url + ']';
   }
 
   set header(value) {
-    let endpointRegex = /(.+)\[(.+)\]/;
-    let result = endpointRegex.exec(value);
+    let result = ResourceNode.headerRegex.exec(value);
 
     this.name = result[1].trim();
     this.url = result[2];
   }
 
   static canAcceptHeader(header) {
-    let resourceRegex = /.+\[.+\]/;
-
-    if (resourceRegex.test(header)) {
-      let actionRegex = /.+\[(GET|POST|DELETE|PUT|UPDATE)\s?(.*)\]/;
-      
-      if (!actionRegex.test(header)) {
-        return true;
-      }
-    }
-
-    return false;
+    return ResourceNode.headerRegex.test(header);
   }
 
   checkAcceptableChild(child) {

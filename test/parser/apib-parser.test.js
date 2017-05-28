@@ -47,7 +47,7 @@ const UNSUPPORTED_METHOD_TEXT = `
 # Unsupported Method
 This is api-blueprint source for test errors.
 
-## Resource with unsupported method [PUNCH /resource]
+## Action with unsupported method [PUNCH /resource]
 It should throw an error.
 `;
 

@@ -19,6 +19,8 @@ let nodeIdCounter = 1;
  * So ModelNode and ActionNode become terminal nodes.
  */
 export default class ApibNode {
+  static headerRegex = /^#* ([^#]*)$/;
+
   constructor() {
     this.id = nodeIdCounter++;
     this.parent = null;
@@ -30,11 +32,12 @@ export default class ApibNode {
   }
 
   get header() {
-    return this.name;
+    return this.hashHeader + ' ' + this.name;
   }
 
   set header(value) {
-    this.name = value;
+    let content = value.substring(value.lastIndexOf('#') + 1, value.length).trim();
+    this.name = content;
   }
 
   get description() {
@@ -51,6 +54,12 @@ export default class ApibNode {
 
   get hashHeader() {
     return HASH_HEADERS[this.depth];
+  }
+
+  // Not only check the header is parsable or not,
+  // but also check data validity by throwing exception. 
+  static canAcceptHeader(header) {
+    return ApibNode.headerRegex.test(header);
   }
 
   checkAcceptableChild(child) {
