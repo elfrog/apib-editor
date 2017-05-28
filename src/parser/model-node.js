@@ -1,6 +1,8 @@
 import ApibNode from './apib-node';
 
 export default class ModelNode extends ApibNode {
+  static headerRegex = /^#* (\S+) \(\S+\)$/;
+
   constructor() {
     super();
 
@@ -9,21 +11,21 @@ export default class ModelNode extends ApibNode {
 
   get header() {
     if (this.modelType) {
-      return this.name + ' (' + this.modelType + ')';
+      return this.hashHeader + ' ' + this.name + ' (' + this.modelType + ')';
     }
 
-    return this.name;
+    return super.header;
   }
 
   set header(value) {
-    let result = /(\S+) \(\S+\)/.exec(value);
+    let result = ModelNode.headerRegex.exec(value);
 
     this.name = result[1];
     this.modelType = result[2];
   }
 
   static canAcceptHeader(header) {
-    return /\S+ \(\S+\)/.test(header);
+    return ModelNode.headerRegex.test(header);
   }
 
   checkAcceptableChild(child) {
