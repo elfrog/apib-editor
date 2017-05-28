@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import VPanelSplitter from '../components/v-panel-splitter';
 import NodePropertyView from './node-property-view';
+import NodeHeader from './node-header';
 
 import brace from 'brace';
 import AceEditor from 'react-ace';
@@ -19,25 +20,6 @@ export default class NodeEditor extends React.Component {
 
   constructor(props) {
     super(props);
-
-    this.state = { header: props.node.hashHeader + ' ' + props.node.header }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    let node = nextProps.node;
-
-    this.setState({ header: node.hashHeader + ' ' + node.header });
-  }
-
-  onHeaderChange = e => {
-    let value = e.target.value;
-    let header = value.substring(value.lastIndexOf('#') + 1, value.length).trim();
-
-    if (this.props.onPropertyChange) {
-      this.props.onPropertyChange(this.props.node, 'header', header);
-    }
-
-    this.setState({ header });
   }
 
   onDescriptionChange = (value) => {
@@ -61,9 +43,7 @@ export default class NodeEditor extends React.Component {
         <NodePropertyView node={node} onPropertyChange={this.onPropertyChange} />
 
         <div className='apib-node-editor-content'>
-          <div className='apib-node-editor-header'>
-            <input type='text' value={this.state.header} onChange={this.onHeaderChange} />
-          </div>
+          <NodeHeader node={node} onChange={value => this.onPropertyChange('header', value)} />
           <AceEditor
             name='apibAceEditor'
             ref='ace'
