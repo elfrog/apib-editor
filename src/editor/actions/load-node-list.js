@@ -8,7 +8,7 @@ export default function loadNodeList() {
     parser.parse(apiData).then(root => {
       resolve({
         rootNode: root,
-        nodeList: root.flatten()
+        activeNodeId: root.id
       });
     });
   });

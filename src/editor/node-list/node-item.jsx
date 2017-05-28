@@ -1,9 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import ContextMenu from '../components/context-menu';
+
 import {
   FaBook, FaCube, FaFolderOpen, FaDatabase, FaCaretDown, FaMinus,
-  FaArrowCircleDown, FaPlusCircle, FaTimesCircle, FaArrowCircleUp
+  FaArrowCircleDown, FaPlusCircle, FaTimesCircle, FaArrowCircleUp,
+  FaEllipsisH
 } from 'react-icons/fa';
 
 import PackageNode from '../../parser/package-node';
@@ -20,6 +23,14 @@ export default class NodeItem extends React.Component {
     onClick: PropTypes.func
   };
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      menuOpen: false
+    };
+  }
+
   onItemClick = (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -27,6 +38,24 @@ export default class NodeItem extends React.Component {
     if (this.props.onClick) {
       this.props.onClick(e);
     }
+  }
+
+  onMenuButtonClick = e => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    this.setState({ menuOpen: true });
+  }
+
+  onContextMenu = e => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    this.setState({ menuOpen: true });
+  }
+
+  closeMenu = () => {
+    this.setState({ menuOpen: false });
   }
 
   getIconByNodeType(node) {
@@ -68,8 +97,18 @@ export default class NodeItem extends React.Component {
     let elem = <div
         className={'apib-node-item' + (this.props.active ? ' active' : '')}
         onClick={this.onItemClick}
-        title={node.name}
+        onContextMenu={this.onContextMenu}
       >
+      {this.state.menuOpen &&
+        <ContextMenu items={[
+            { label: 'test1' },
+            { label: 'test2' },
+            { label: 'test3' }
+          ]}
+          onClose={this.closeMenu}
+        />
+      }
+
       <div className='apib-node-depth-spaces'>
         {depthSpaces}
       </div>
@@ -79,9 +118,13 @@ export default class NodeItem extends React.Component {
         <div className='apib-node-header-icon'>{iconElement}</div>
       }
 
-      <div className='apib-node-header'>
+      <div className='apib-node-header' title={node.name}>
         {node.name}
       </div>
+
+      <button className='apib-node-menu-button' onClick={this.onMenuButtonClick}>
+        <FaEllipsisH />
+      </button>
     </div>;
 
     return elem;
