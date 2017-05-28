@@ -14,6 +14,7 @@
 }
 
 .apib-node-item {
+  position: relative;
   height: @node-item-height;
   line-height: @node-item-height;
   padding: 0;
@@ -41,7 +42,6 @@
 
 .apib-node-header {
   display: block;
-  float: left;
   height: @node-item-height;
 }
 
@@ -77,6 +77,34 @@
   width: @node-item-height / 2;
   height: @node-item-height;
   border-right: 1px solid @body-highlight-color;
+}
+
+.apib-node-menu-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: @node-item-height;
+  height: @node-item-height;
+  line-height: @node-item-height;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background-color: inherit;
+  color: @body-text-color;
+  font-size: 1em;
+  opacity: 0;
+  transition: opacity 300ms;
+
+  &:hover {
+    background-color: @body-color;
+    cursor: pointer;
+  }
+}
+
+.apib-node-item:hover {
+  .apib-node-menu-button {
+    opacity: 1;
+  }
 }
 
 .apib-node-list-filter {
