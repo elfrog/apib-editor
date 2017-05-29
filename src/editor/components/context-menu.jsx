@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
 import { FaCaretRight } from 'react-icons/fa';
@@ -106,8 +107,18 @@ class MenuItem extends React.Component {
 class Menu extends React.Component {
   static propTypes = {
     items: PropTypes.array.isRequired,
-    onItemClick: PropTypes.func
+    onItemClick: PropTypes.func,
+    onSize: PropTypes.func
   };
+
+  componentDidMount() {
+    if (this.props.onSize) {
+      let menuDom = ReactDOM.findDOMNode(this);
+      let rect = menuDom.getBoundingClientRect();
+
+      this.props.onSize(rect);
+    }
+  }
 
   // onItemClick is propagated for making root of Menu
   // (especially ContextMenu) noticed certain MenuItem clicked.
@@ -134,19 +145,126 @@ class Menu extends React.Component {
   }
 }
 
+let globalContextMenu = null;
+
 export default class ContextMenu extends React.Component {
   static propTypes = {
-    items: PropTypes.any,
-    position: PropTypes.any,
     onClose: PropTypes.func
   };
+  // position calculators
+  static positioners = {
+    BOTTOM_LEFT: function (targetRect, menuRect) {
+      return {
+        top: targetRect.bottom,
+        left: targetRect.left
+      };
+    },
+    RIGHT_BOTTOM: function (targetRect, menuRect) {
+      return {
+        top: targetRect.bottom - menuRect.height,
+        left: targetRect.right
+      };
+    },
+    TOP_RIGHT: function (targetRect, menuRect) {
+      return {
+        top: targetRect.top - menuRect.height,
+        left: targetRect.right - menuRect.width
+      };
+    },
+    LEFT_TOP: function (targetRect, menuRect) {
+      return {
+        top: targetRect.top,
+        left: targetRect.left - menuRect.width
+      };
+    },
+    BOTTOM_RIGHT: function (targetRect, menuRect) {
+      return {
+        top: targetRect.bottom,
+        left: targetRect.right - menuRect.width
+      };
+    },
+    RIGHT_TOP: function (targetRect, menuRect) {
+      return {
+        top: targetRect.top,
+        left: targetRect.right
+      };
+    },
+    TOP_LEFT: function (targetRect, menuRect) {
+      return {
+        top: targetRect.top - menuRect.height,
+        left: targetRect.left
+      };
+    },
+    LEFT_BOTTOM: function (targetRect, menuRect) {
+      return {
+        top: targetRect.bottom - menuRect.height,
+        left: targetRect.left - menuRect.width
+      };
+    }
+  };
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      items: null,
+      position: null,
+      target: null
+    };
+  }
+
+  static open(option) {
+    if (globalContextMenu === null) {
+      throw new Error('ContextMenu isn\'t mounted.');
+    }
+
+    globalContextMenu.setState(option);
+  }
 
   componentDidMount() {
+    if (globalContextMenu !== null) {
+      throw new Error('ContextMenu must be a single object.');
+    }
+
+    globalContextMenu = this;
+
     document.addEventListener('mousedown', this.onMouseDown);
   }
 
   componentWillUnmount() {
+    globalContextMenu = null;
+
     document.removeEventListener('mousedown', this.onMouseDown);
+  }
+
+  getDocumentSize() {
+    let body = document.body;
+    let html = document.documentElement;
+    return {
+      width: Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth),
+      height: Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight)
+    };
+  }
+
+  onMenuSize = size => {
+    let position = this.state.position || { top: 0, left: 0 };
+    let documentSize = this.getDocumentSize();
+
+    if (typeof this.state.position === 'function') {
+      if (!this.state.target) {
+        throw new Error('A target must be specified to determine ContextMenu position.');
+      }
+
+      let targetDom = ReactDOM.findDOMNode(this.state.target);
+      let targetRect = targetDom.getBoundingClientRect();
+
+      position = this.state.position(targetRect, size);
+    }
+
+    position.top = Math.min(documentSize.height - size.height, Math.max(0, position.top));
+    position.left = Math.min(documentSize.width - size.width, Math.max(0, position.left));
+
+    this.setState({ position });
   }
 
   onMouseDown = e => {
@@ -173,19 +291,29 @@ export default class ContextMenu extends React.Component {
     if (this.props.onClose) {
       this.props.onClose();
     }
+
+    this.setState({
+      items: null,
+      position: null,
+      target: null
+    });
   }
 
   render() {
     let style = {};
 
-    if (this.props.position) {
-      style.top = this.props.position.top;
-      style.left = this.props.position.left;
+    if (this.state.position && !(typeof this.state.position === 'function')) {
+      style.top = this.state.position.top + 'px';
+      style.left = this.state.position.left + 'px';
     }
 
     return <div className='context-menu' style={style}>
-      {this.props.items &&
-        <Menu items={this.props.items} onItemClick={this.closeContextMenu} />
+      {this.state.items &&
+        <Menu
+          items={this.state.items}
+          onItemClick={this.closeContextMenu}
+          onSize={this.onMenuSize}
+        />
       }
     </div>;
   }
