@@ -47,12 +47,18 @@ export default class NodePropertyView extends React.Component {
     let node = this.props.node;
     let urlElement = null;
     let nodeTypeName = getNodeTypeName(node);
+    let autoFocus = node.name ? false : true;
 
     if (node instanceof ActionNode) {
       if (node.url) {
         urlElement = <Text label='URL' value={node.url} onChange={value => this.onPropertyChange('url', value)} />;
       } else {
-        urlElement = <Text label='URL' placeholder={node.urlInherited} onChange={value => this.onPropertyChange('url', value)} />;
+        try {
+          let url = node.urlInherited;
+          urlElement = <Text label='URL' placeholder={url} onChange={value => this.onPropertyChange('url', value)} />;
+        } catch (e) {
+          urlElement = <Text label='URL' placeholder={'url'} onChange={value => this.onPropertyChange('url', value)} />;
+        }
       }
     } else if (node.hasOwnProperty('url')) {
       urlElement = <Text label='URL' value={node.url} onChange={value => this.onPropertyChange('url', value)} />;
@@ -61,7 +67,7 @@ export default class NodePropertyView extends React.Component {
     return <div className='apib-node-property-view property-view'>
       <h2 className='property-view-title'>{nodeTypeName}</h2>
 
-      <Text label='Name' value={node.name} onChange={value => this.onPropertyChange('name', value)} />
+      <Text label='Name' value={node.name} onChange={value => this.onPropertyChange('name', value)} autoFocus={autoFocus} />
 
       {urlElement}
 
@@ -75,7 +81,12 @@ export default class NodePropertyView extends React.Component {
       }
 
       {node instanceof ModelNode &&
-        <Select label='Model Type' value={node.modelType} options={['object', 'enum']} />
+        <Select
+          label='Model Type'
+          value={node.modelType}
+          options={['object', 'enum']}
+          onChange={value => this.onPropertyChange('modelType', value)}
+        />
       }
     </div>;
   }
