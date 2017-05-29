@@ -1,0 +1,65 @@
+
+.toast {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 1500;
+  justify-content: center;
+
+  .toast-box {
+    position: relative;
+    top: -@unit-height * 4;
+    height: 0;
+    line-height: @unit-height * 2;
+    margin: @unit-margin;
+    background-color: @body-color;
+    box-shadow: 1px 1px 5px darken(@body-color, 10%);
+    opacity: 0;
+    transition: all 300ms;
+    pointer-events: all;
+
+    &.message {
+      color: @body-text-color;
+    }
+
+    &.error {
+      color: @red;
+    }
+
+    &.warning {
+      color: @orange;
+    }
+
+    &.open {
+      top: 0;
+      height: @unit-height * 2;
+      opacity: 1;
+    }
+  }
+
+  .toast-message {
+    float: left;
+    margin: 0 @unit-height;
+  }
+
+  .toast-close-button {
+    width: @unit-height * 2;
+    height: @unit-height * 2;
+    line-height: @unit-height * 2;
+    cursor: pointer;
+    border: 0;
+    background-color: transparent;
+    color: @body-text-color;
+
+    svg {
+      margin-top: -1px;
+    }
+
+    &:hover {
+      color: @blue;
+    }
+  }
+}
