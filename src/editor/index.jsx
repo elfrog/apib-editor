@@ -2,6 +2,7 @@ import React from 'react';
 
 import VPanelSplitter from './components/v-panel-splitter';
 import Panel from './components/panel';
+import ContextMenu from './components/context-menu';
 
 import NodeList from './node-list';
 import NodeEditor from './node-editor';
@@ -24,6 +25,8 @@ export default class Editor extends React.Component {
           filter={this.props.nodeListFilter}
           onFilter={this.action.do.filterNodeList}
           onSelect={this.action.do.selectNode}
+          onAddNode={this.action.do.addChildNode}
+          onRemoveNode={this.action.do.removeChildNode}
         />
 
         {this.props.activeNodeId ?
@@ -37,6 +40,8 @@ export default class Editor extends React.Component {
           </div>
         }
       </VPanelSplitter>
+
+      <ContextMenu />
     </div>;
   }
 }

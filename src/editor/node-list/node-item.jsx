@@ -1,12 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import ContextMenu from '../components/context-menu';
 
 import {
   FaBook, FaCube, FaFolderOpen, FaDatabase, FaCaretDown, FaMinus,
   FaArrowCircleDown, FaPlusCircle, FaTimesCircle, FaArrowCircleUp,
-  FaEllipsisH
+  FaEllipsisH, FaTrash, FaPlus
 } from 'react-icons/fa';
 
 import PackageNode from '../../parser/package-node';
@@ -20,15 +19,88 @@ export default class NodeItem extends React.Component {
   static propTypes = {
     node: PropTypes.any.isRequired,
     active: PropTypes.bool,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    onAddNode: PropTypes.func,
+    onRemoveNode: PropTypes.func
   };
 
   constructor(props) {
     super(props);
+  }
 
-    this.state = {
-      menuOpen: false
-    };
+  addNode(childNode) {
+    if (this.props.onAddNode) {
+      this.props.onAddNode(this.props.node, childNode);
+    }
+  }
+
+  getNodeMenuItems() {
+    let node = this.props.node;
+    let items = [];
+
+    if (node instanceof PackageNode) {
+      items.push({
+        label: 'Add Package',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new PackageNode())
+      });
+      items.push({
+        label: 'Add Resource Group',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ResourceGroupNode())
+      });
+      items.push({
+        label: 'Add Model Group',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ModelGroupNode())
+      });
+    } else if (node instanceof ResourceGroupNode) {
+      items.push({
+        label: 'Add Resource',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ResourceNode())
+      });
+      items.push({
+        label: 'Add Action',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ActionNode())
+      });
+      items.push({
+        label: 'Add Model Group',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ModelGroupNode())
+      });
+    } else if (node instanceof ModelGroupNode) {
+      items.push({
+        label: 'Add Model',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ModelNode())
+      });
+    } else if (node instanceof ResourceNode) {
+      items.push({
+        label: 'Add Action',
+        icon: <FaPlus />,
+        onClick: () => this.addNode(new ActionNode())
+      });
+    }
+
+    if (node.parent) {
+      if (items.length > 0) {
+        items.push({ separator: true });
+      }
+
+      items.push({
+        label: 'Remove',
+        icon: <FaTrash />,
+        onClick: () => {
+          if (this.props.onRemoveNode) {
+            this.props.onRemoveNode(node.parent, node);
+          }
+        }
+      });
+    }
+
+    return items;
   }
 
   onItemClick = (e) => {
@@ -44,18 +116,21 @@ export default class NodeItem extends React.Component {
     e.stopPropagation();
     e.preventDefault();
 
-    this.setState({ menuOpen: true });
+    ContextMenu.open({
+      items: this.getNodeMenuItems(),
+      target: this,
+      position: ContextMenu.positioners.BOTTOM_RIGHT
+    });
   }
 
   onContextMenu = e => {
     e.stopPropagation();
     e.preventDefault();
 
-    this.setState({ menuOpen: true });
-  }
-
-  closeMenu = () => {
-    this.setState({ menuOpen: false });
+    ContextMenu.open({
+      items: this.getNodeMenuItems(),
+      position: { top: e.pageY, left: e.pageX }
+    });
   }
 
   getIconByNodeType(node) {
@@ -99,15 +174,6 @@ export default class NodeItem extends React.Component {
         onClick={this.onItemClick}
         onContextMenu={this.onContextMenu}
       >
-      {this.state.menuOpen &&
-        <ContextMenu items={[
-            { label: 'test1' },
-            { label: 'test2' },
-            { label: 'test3' }
-          ]}
-          onClose={this.closeMenu}
-        />
-      }
 
       <div className='apib-node-depth-spaces'>
         {depthSpaces}
