@@ -6,7 +6,11 @@ import { FaCaretRight } from 'react-icons/fa';
 
 class MenuItemSeparator extends React.Component {
   render() {
-    return <div className='menu-item-separator'></div>;
+    return <div
+      className='menu-item-separator'
+      onContextMenu={e => { e.stopPropagation(); e.preventDefault(); }}
+    >
+    </div>;
   }
 }
 
@@ -66,6 +70,7 @@ class MenuItem extends React.Component {
     return <div
       className='menu-item'
       onClick={this.onItemClick}
+      onContextMenu={this.onItemClick}
       onMouseLeave={() => this.toggleSubMenu(false)}
       onMouseEnter={() => this.toggleSubMenu(true)}
     >
