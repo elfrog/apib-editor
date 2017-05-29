@@ -1,8 +1,9 @@
 import ApibNode from './apib-node';
-import ActionNode, { ACTION_NODE_HEADER_REGEX } from './action-node';
+import ActionNode from './action-node';
 
 export default class ResourceNode extends ApibNode {
   static headerRegex = /^#* (.+) \[(\S+)\]$/;
+  static acceptableNodes = [ActionNode];
 
   constructor() {
     super();
@@ -23,11 +24,5 @@ export default class ResourceNode extends ApibNode {
 
   static canAcceptHeader(header) {
     return ResourceNode.headerRegex.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ActionNode)) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
   }
 }

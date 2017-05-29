@@ -9,7 +9,7 @@ export default class ActionNode extends ApibNode {
     super();
 
     this.url = '';
-    this.action = '';
+    this.action = 'GET';
   }
 
   get header() {
@@ -50,9 +50,5 @@ export default class ActionNode extends ApibNode {
     }
 
     return true;
-  }
-
-  checkAcceptableChild(child) {
-    throw new Error('Action node is a terminal node that doesn\'t accept any children.');
   }
 }

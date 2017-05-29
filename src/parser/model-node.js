@@ -1,12 +1,12 @@
 import ApibNode from './apib-node';
 
 export default class ModelNode extends ApibNode {
-  static headerRegex = /^#* (\S+) \(\S+\)$/;
+  static headerRegex = /^#* (\S+) \((\S+)\)$/;
 
   constructor() {
     super();
 
-    this.modelType = '';
+    this.modelType = 'object';
   }
 
   get header() {
@@ -26,9 +26,5 @@ export default class ModelNode extends ApibNode {
 
   static canAcceptHeader(header) {
     return ModelNode.headerRegex.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    throw new Error('Model node is a terminal node that doesn\'t accept any children.');
   }
 }

@@ -3,6 +3,7 @@ import ModelNode from './model-node';
 
 export default class ModelGroupNode extends ApibNode {
   static headerRegex = /^#* Data Structures$/;
+  static acceptableNodes = [ModelNode];
 
   get name() {
     return 'Data Structures';
@@ -22,11 +23,5 @@ export default class ModelGroupNode extends ApibNode {
 
   static canAcceptHeader(header) {
     return ModelGroupNode.headerRegex.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ModelNode)) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
   }
 }

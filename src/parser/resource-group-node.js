@@ -5,6 +5,7 @@ import ActionNode from './action-node';
 
 export default class ResourceGroupNode extends ApibNode {
   static headerRegex = /^#* Group (.+)$/;
+  static acceptableNodes = [ResourceNode, ActionNode, ModelGroupNode];
 
   get header() {
     return this.hashHeader + ' Group ' + this.name;
@@ -18,14 +19,5 @@ export default class ResourceGroupNode extends ApibNode {
 
   static canAcceptHeader(header) {
     return ResourceGroupNode.headerRegex.test(header);
-  }
-
-  checkAcceptableChild(child) {
-    if (!(child instanceof ResourceNode) && 
-        !(child instanceof ModelGroupNode) &&
-        !(child instanceof ActionNode)
-    ) {
-      throw new Error('The given node is not acceptable for child.');
-    } 
   }
 }

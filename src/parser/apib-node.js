@@ -20,6 +20,7 @@ let nodeIdCounter = 1;
  */
 export default class ApibNode {
   static headerRegex = /^#* ([^#]*)$/;
+  static acceptableNodes = [ApibNode];
 
   constructor() {
     this.id = nodeIdCounter++;
@@ -63,7 +64,9 @@ export default class ApibNode {
   }
 
   checkAcceptableChild(child) {
-    ;
+    if (this.constructor.acceptableNodes.indexOf(child.constructor) < 0) {
+      throw new Error('The given node can\'t be a child.');
+    }
   }
 
   hasChild(child) {
