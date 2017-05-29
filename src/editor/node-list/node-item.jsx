@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ContextMenu from '../components/context-menu';
+import DragAndDrop from '../components/drag-and-drop';
 
 import {
   FaBook, FaCube, FaFolderOpen, FaDatabase, FaCaretDown, FaMinus,
@@ -21,7 +22,8 @@ export default class NodeItem extends React.Component {
     active: PropTypes.bool,
     onClick: PropTypes.func,
     onAddNode: PropTypes.func,
-    onRemoveNode: PropTypes.func
+    onRemoveNode: PropTypes.func,
+    onChangeNodeIndex: PropTypes.func
   };
 
   constructor(props) {
@@ -133,6 +135,42 @@ export default class NodeItem extends React.Component {
     });
   }
 
+  onMouseDown = e => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!this.props.onChangeNodeIndex) {
+      return;
+    }
+
+    DragAndDrop.start({
+      label: this.props.node.name,
+      onDrop: e => {
+        let nodeId = this.getNodeIdFromDom(e.target);
+
+        if (nodeId) {
+          this.props.onChangeNodeIndex(this.props.node, nodeId);
+        }
+      }
+    });
+  }
+
+  getNodeIdFromDom(target) {
+    let p = target;
+
+    while (p && p.getAttribute) {
+      let nodeId = p.getAttribute('data-node-id');
+
+      if (nodeId) {
+        return Number(nodeId);
+      }
+
+      p = p.parentNode;
+    }
+
+    return null;
+  }
+
   getIconByNodeType(node) {
     if (node.parent === null) {
       return <FaBook />;
@@ -169,10 +207,12 @@ export default class NodeItem extends React.Component {
       );
     }
 
-    let elem = <div
+    return <div
         className={'apib-node-item' + (this.props.active ? ' active' : '')}
+        data-node-id={node.id}
         onClick={this.onItemClick}
         onContextMenu={this.onContextMenu}
+        onMouseDown={this.onMouseDown}
       >
 
       <div className='apib-node-depth-spaces'>
@@ -184,7 +224,7 @@ export default class NodeItem extends React.Component {
         <div className='apib-node-header-icon'>{iconElement}</div>
       }
 
-      <div className='apib-node-header' title={node.name}>
+      <div className='apib-node-header'> 
         {node.name}
       </div>
 
@@ -192,7 +232,5 @@ export default class NodeItem extends React.Component {
         <FaEllipsisH />
       </button>
     </div>;
-
-    return elem;
   }
 }

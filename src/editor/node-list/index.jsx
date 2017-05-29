@@ -29,7 +29,8 @@ export default class NodeList extends React.Component {
     onFilter: PropTypes.func,
     onSelect: PropTypes.func,
     onAddNode: PropTypes.func,
-    onRemoveNode: PropTypes.func
+    onRemoveNode: PropTypes.func,
+    onChangeNodeIndex: PropTypes.func
   };
 
   constructor(props) {
@@ -72,6 +73,7 @@ export default class NodeList extends React.Component {
         onClick={e => this.onItemSelect(node)}
         onAddNode={this.props.onAddNode}
         onRemoveNode={this.props.onRemoveNode}
+        onChangeNodeIndex={this.props.onChangeNodeIndex}
       />
     );
 

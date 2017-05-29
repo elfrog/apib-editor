@@ -5,6 +5,7 @@ import selectNode from './select-node';
 import changeNodeProperty from './change-node-property';
 import addChildNode from './add-child-node';
 import removeChildNode from './remove-child-node';
+import changeNodeIndex from './change-node-index';
 
 export let actions = [
   loadNodeList,
@@ -12,7 +13,8 @@ export let actions = [
   selectNode,
   changeNodeProperty,
   addChildNode,
-  removeChildNode
+  removeChildNode,
+  changeNodeIndex
 ];
 
 export let initialState = {
