@@ -32,7 +32,6 @@ export default class ApibParser {
         let parent = node.findRecentParent(depth);
         let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(line));
         node = new nodeClass();
-        node.depth = depth;
         node.header = line;
         parent.addChild(node);
       } else if (line.trim().indexOf(':::') === 0) {

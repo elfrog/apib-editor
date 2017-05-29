@@ -81,6 +81,7 @@ export default class ApibNode {
     }
 
     child.parent = this;
+    child.setDepth(this.depth + 1);
     this.children.push(child);
   }
 
@@ -96,6 +97,7 @@ export default class ApibNode {
     }
 
     child.parent = this;
+    child.setDepth(this.depth + 1);
     this.children.splice(index, 0, child);
   }
 
@@ -125,6 +127,14 @@ export default class ApibNode {
     if (child) {
       this.children.splice(index, 1);
       child.parent = null;
+    }
+  }
+
+  setDepth(depth) {
+    this.depth = depth;
+
+    for (let child of this.children) {
+      child.setDepth(depth + 1);
     }
   }
 
