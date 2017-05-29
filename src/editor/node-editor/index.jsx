@@ -51,6 +51,7 @@ export default class NodeEditor extends React.Component {
             theme='solarized_dark'
             width='100%'
             height='100%'
+            style={{ fontFamily: 'Consolas, Monaco' }}
             fontSize={14}
             tabSize={4}
             wrapEnabled={true}
