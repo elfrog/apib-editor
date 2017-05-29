@@ -27,7 +27,9 @@ export default class NodeList extends React.Component {
     activeNode: PropTypes.any,
     filter: PropTypes.string,
     onFilter: PropTypes.func,
-    onSelect: PropTypes.func
+    onSelect: PropTypes.func,
+    onAddNode: PropTypes.func,
+    onRemoveNode: PropTypes.func
   };
 
   constructor(props) {
@@ -63,7 +65,14 @@ export default class NodeList extends React.Component {
     let nodeList = this.props.rootNode ?
       (this.props.filter ? filterAndFlattenNode(this.props.rootNode, this.props.filter) : this.props.rootNode.flatten()) : [];
     let nodeItems = nodeList.map(node => 
-      <NodeItem key={node.id} node={node} active={node === this.props.activeNode} onClick={e => this.onItemSelect(node)} />
+      <NodeItem
+        key={node.id}
+        node={node}
+        active={node === this.props.activeNode}
+        onClick={e => this.onItemSelect(node)}
+        onAddNode={this.props.onAddNode}
+        onRemoveNode={this.props.onRemoveNode}
+      />
     );
 
     return <div className='apib-node-list'>
