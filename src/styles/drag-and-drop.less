@@ -1,0 +1,19 @@
+
+.drag-and-drop {
+  position: absolute;
+  cursor: default;
+  z-index: 1100;
+
+  .drag-and-drop-dummy {
+    position: absolute;
+    height: @unit-height;
+    line-height: @unit-height;
+    padding: 0 @unit-height / 2;
+    white-space: nowrap;
+    background-color: @body-text-color;
+    color: @body-color;
+    border-radius: @unit-height / 2;
+    box-shadow: 1px 1px 5px darken(@body-color, 10%);
+    opacity: 0.8;
+  }
+}
