@@ -42,4 +42,42 @@ describe('Action', () => {
       action.do.testAsyncAction(3);
     });
   });
+
+  it('should undo correctly', () => {
+    let action = new Action({ squared: 0 });
+
+    action.register('testAction', testAction);
+
+    action.do.testAction(3);
+    action.do.testAction(2);
+
+    assert.equal(action.history.length, 3);
+    assert.equal(action.historyIndex, 3);
+    assert.equal(action.state.squared, 4);
+
+    action.undo();
+
+    assert.equal(action.historyIndex, 2);
+    assert.equal(action.state.squared, 9);
+
+    action.do.testAction(5);
+
+    assert.equal(action.historyIndex, 3);
+    assert.equal(action.state.squared, 25);
+  });
+
+  it('should redo correctly', () => {
+    let action = new Action({ squared: 0 });
+
+    action.register('testAction', testAction);
+
+    action.do.testAction(3);
+    action.do.testAction(2);
+
+    action.undo();
+    action.redo();
+
+    assert.equal(action.historyIndex, 3);
+    assert.equal(action.state.squared, 4);
+  });
 });
