@@ -6,6 +6,7 @@ export default class Text extends React.Component {
     label: PropTypes.string,
     placeholder: PropTypes.string,
     value: PropTypes.string,
+    autoFocus: PropTypes.bool,
     onChange: PropTypes.func
   };
 
@@ -13,6 +14,12 @@ export default class Text extends React.Component {
     super(props);
 
     this.state = { value: props.value };
+  }
+
+  componentDidUpdate() {
+    if (this.props.autoFocus) {
+      this.input.focus();
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -41,6 +48,7 @@ export default class Text extends React.Component {
           <input
             type='text'
             value={this.state.value || ''}
+            ref={input => this.input = input}
             placeholder={this.props.placeholder || ''}
             onChange={this.onValueChange}
           />
