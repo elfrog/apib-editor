@@ -12,7 +12,21 @@ import StartPage from './start-page';
 import NodeList from './node-list';
 import NodeEditor from './node-editor';
 
+import EditorRepository from './editor-repository';
+
+import { editorCommands } from './editor-commands';
 import { getMenuItems } from './editor-menu';
+
+EditorRepository.defaultValues = {
+  'editor.saved.data': null,
+  'editor.saved.name': null,
+  'editor.ui.nodeListPanelSize': 300,
+  'editor.ui.nodePropertyViewPanelSize': 300,
+  'editor.options.vimMode': false,
+  'editor.options.font': 'Consolas, Monaco',
+  'editor.options.fontSize': 14,
+  'editor.options.theme': 'Solarized Dark'
+};
 
 export default class Editor extends React.Component {
   constructor(props) {
@@ -20,6 +34,69 @@ export default class Editor extends React.Component {
 
     this.action = props.action;
     this.menuItems = getMenuItems(this.action);
+  }
+
+  componentDidMount() {
+    window.addEventListener('beforeunload', this.storeEditorState);
+    document.addEventListener('keydown', this.onKeyDown);
+
+    this.action.do.loadFromRepository();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('beforeunload', this.storeEditorState);
+    document.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  storeEditorState = () => {
+    let rootNode = this.action.state.rootNode;
+
+    if (rootNode) {
+      let data = rootNode.asString();
+
+      EditorRepository.setItem('editor.saved.data', data);
+      EditorRepository.setItem('editor.saved.name', rootNode.name);
+    }
+  }
+
+  onKeyDown = e => {
+    let keys = [];
+
+    if (e.altKey) {
+      keys.push('Alt');
+    }
+
+    if (e.ctrlKey) {
+      keys.push('Ctrl');
+    }
+
+    if (e.shiftKey) {
+      keys.push('Shift');
+    }
+
+    if (keys.length === 0) {
+      return;
+    }
+
+    keys.push(e.key.toUpperCase());
+
+    let shortcut = keys.join('+');
+
+    for (let commandName in editorCommands) {
+      let command = editorCommands[commandName];
+
+      if (command.shortcut === shortcut) {
+        if (command.disabled && command.disabled(this.action) === true) {
+          return;
+        }
+
+        command.onAction(this.action);
+
+        e.preventDefault();
+        e.stopPropagation();
+        break;
+      }
+    }
   }
 
   render() {
@@ -32,7 +109,10 @@ export default class Editor extends React.Component {
 
       <div className='apib-editor-content'>      
         {activeNode &&
-          <VPanelSplitter>
+          <VPanelSplitter
+            defaultLeftPanelSize={EditorRepository.getItemAsNumber('editor.ui.nodeListPanelSize')}
+            onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodeListPanelSize', size)}
+          >
             <NodeList
               rootNode={this.props.rootNode}
               activeNode={activeNode}

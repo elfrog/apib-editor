@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import EditorRepository from '../editor-repository';
+
 import VPanelSplitter from '../components/v-panel-splitter';
 import NodePropertyView from './node-property-view';
 import NodeHeader from './node-header';
@@ -40,7 +42,10 @@ export default class NodeEditor extends React.Component {
     let source = node.description;
 
     return <div className='apib-node-editor'>
-      <VPanelSplitter defaultLeftPanelSize={300}>
+      <VPanelSplitter
+        defaultLeftPanelSize={EditorRepository.getItemAsNumber('editor.ui.nodePropertyViewPanelSize')}
+        onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodePropertyViewPanelSize', size)}
+      >
         <NodePropertyView rootNode={this.props.rootNode} activeNode={node} onPropertyChange={this.onPropertyChange} />
 
         <div className='apib-node-editor-content'>
@@ -56,6 +61,7 @@ export default class NodeEditor extends React.Component {
               style={{ fontFamily: 'Consolas, Monaco' }}
               fontSize={14}
               tabSize={4}
+              useSoftTabs={true}
               wrapEnabled={true}
               keyboardHandler='vim'
               editorProps={{$blockScrolling: Infinity}}
