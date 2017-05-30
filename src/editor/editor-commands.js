@@ -1,15 +1,3 @@
-
-function serializeApibNode(rootNode) {
-  const newLine = '\r\n';
-
-  let nodeList = rootNode.flatten();
-  nodeList.shift();
-  let contentList = nodeList.map(node => (node.header + newLine + node.description));
-  contentList.unshift(rootNode.description);
-  let content = contentList.map(s => s.trim()).join(newLine + newline) + newLine + newLine;
-  return content;
-}
-
 export let editorCommands = {
   newDocument: {
     label: 'New',
@@ -37,7 +25,7 @@ export let editorCommands = {
     shortcut: 'Ctrl+S',
     disabled: action => !action.state.rootNode,
     onAction: action => {
-      let content = serializeApibNode(action.state.rootNode);
+      let content = Aaction.state.rootNode.asString();
       let blob = new Blob([content], { type: 'text/plain' });
       let url = window.URL.createObjectURL(blob);
       let a = document.createElement('a');

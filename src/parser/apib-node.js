@@ -192,4 +192,11 @@ export default class ApibNode {
 
     return node;
   }
+
+  asString(newLine = '\r\n') {
+    let content = (this.parent ? this.header + newLine : '') + this.description.trim();
+    let contentList = this.children.map(child => child.asString(newLine).trim());
+
+    return content + newLine + newLine + contentList.join(newLine + newLine);
+  }
 }
