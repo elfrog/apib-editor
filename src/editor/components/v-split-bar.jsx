@@ -7,7 +7,8 @@ export default class VSplitBar extends React.Component {
     left: PropTypes.number.isRequired,
     size: PropTypes.number,
     draggable: PropTypes.bool,
-    onPositionChange: PropTypes.func
+    onPositionChange: PropTypes.func,
+    onDragEnd: PropTypes.func
   };
 
   constructor(props) {
@@ -34,6 +35,10 @@ export default class VSplitBar extends React.Component {
 
   onMouseUp = e => {
     this.setState({ dragging: false });
+
+    if (this.props.onDragEnd) {
+      this.props.onDragEnd(e);
+    }
 
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);

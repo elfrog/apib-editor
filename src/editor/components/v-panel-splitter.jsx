@@ -48,6 +48,12 @@ export default class VPanelSplitter extends React.Component {
     }
   }
 
+  onSplitterDragEnd = e => {
+    if (this.props.onPanelSizeChange) {
+      this.props.onPanelSizeChange(this.state.leftPanelSize);
+    }
+  }
+
   render() {
     let leftPanelSize = this.state.leftPanelSize;
 
@@ -61,6 +67,7 @@ export default class VPanelSplitter extends React.Component {
         size={SPLIT_BAR_SIZE}
         draggable={this.props.resizable}
         onPositionChange={this.onSplitterChange}
+        onDragEnd={this.onSplitterDragEnd}
       />
 
       <Panel left={leftPanelSize + SPLIT_BAR_SIZE}>
