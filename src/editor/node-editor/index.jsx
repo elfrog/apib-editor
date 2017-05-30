@@ -45,22 +45,24 @@ export default class NodeEditor extends React.Component {
 
         <div className='apib-node-editor-content'>
           <NodeHeader activeNode={node} onChange={value => this.onPropertyChange('header', value)} />
-          <AceEditor
-            name='apibAceEditor'
-            ref='ace'
-            mode='markdown'
-            theme='solarized_dark'
-            width='100%'
-            height='100%'
-            style={{ fontFamily: 'Consolas, Monaco' }}
-            fontSize={14}
-            tabSize={4}
-            wrapEnabled={true}
-            keyboardHandler='vim'
-            editorProps={{$blockScrolling: Infinity}}
-            value={source}
-            onChange={this.onDescriptionChange}
-          />
+          <div className='apib-node-editor-description'>
+            <AceEditor
+              name='apibAceEditor'
+              ref='ace'
+              mode='markdown'
+              theme='solarized_dark'
+              width='100%'
+              height='100%'
+              style={{ fontFamily: 'Consolas, Monaco' }}
+              fontSize={14}
+              tabSize={4}
+              wrapEnabled={true}
+              keyboardHandler='vim'
+              editorProps={{$blockScrolling: Infinity}}
+              value={source}
+              onChange={this.onDescriptionChange}
+            />
+          </div>
         </div>
       </VPanelSplitter>
     </div>;
