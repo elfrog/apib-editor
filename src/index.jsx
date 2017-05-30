@@ -22,7 +22,6 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.action.do.loadNodeList();
     this.action.on.stateChange.add((state) => {
       this.setState(state);
     });
