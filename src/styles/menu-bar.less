@@ -1,0 +1,35 @@
+
+.menu-bar {
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0px 1px 3px darken(@body-color, 10%);
+
+  .menu-bar-separator {
+    float: left;
+    width: 1px;
+    height: @unit-height - 6px;
+    margin: 3px @unit-margin;
+    border-left: 1px solid @body-highlight-color;
+  }
+
+  .menu-bar-button {
+    float: left;
+
+    button {
+      height: @unit-height;
+      line-height: @unit-height;
+      margin: 0;
+      padding: 0 @unit-margin;
+      border: 0;
+      border-radius: 0;
+      background-color: @body-color;
+      color: @body-text-color;
+      cursor: pointer;
+
+      &:hover {
+        background-color: @body-highlight-color;
+        color: @primary-text-color;
+      }
+    }
+  }
+}
