@@ -19,6 +19,7 @@ class MenuItem extends React.Component {
     label: PropTypes.string.isRequired,
     shortcut: PropTypes.string,
     icon: PropTypes.element,
+    disabled: PropTypes.bool,
     items: PropTypes.array,
     onClick: PropTypes.func,
     onItemClick: PropTypes.func
@@ -34,6 +35,10 @@ class MenuItem extends React.Component {
   onItemClick = e => {
     e.stopPropagation();
     e.preventDefault();
+
+    if (this.props.disabled) {
+      return;
+    }
 
     if (this.props.onClick) {
       this.props.onClick(e);
@@ -68,7 +73,7 @@ class MenuItem extends React.Component {
 
   render() {
     return <div
-      className='menu-item'
+      className={'menu-item' + (this.props.disabled ? ' disabled' : '')}
       onClick={this.onItemClick}
       onContextMenu={this.onItemClick}
       onMouseLeave={() => this.toggleSubMenu(false)}
@@ -252,18 +257,18 @@ export default class ContextMenu extends React.Component {
   }
 
   onMenuSize = size => {
-    let position = this.state.position || { top: 0, left: 0 };
+    let position = this.state.position || (this.state.target ? ContextMenu.positioners.BOTTOM_LEFT : { top: 0, left: 0 });
     let documentSize = this.getDocumentSize();
 
-    if (typeof this.state.position === 'function') {
+    if (typeof position === 'function') {
       if (!this.state.target) {
         throw new Error('A target must be specified to determine ContextMenu position.');
       }
 
-      let targetDom = ReactDOM.findDOMNode(this.state.target);
+      let targetDom = this.state.target instanceof React.Component ? ReactDOM.findDOMNode(this.state.target) : this.state.target;
       let targetRect = targetDom.getBoundingClientRect();
 
-      position = this.state.position(targetRect, size);
+      position = position(targetRect, size);
     }
 
     position.top = Math.min(documentSize.height - size.height, Math.max(0, position.top));

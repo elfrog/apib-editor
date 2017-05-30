@@ -21,8 +21,14 @@
       white-space: nowrap;
       overflow: shown;
 
-      &:hover {
-        background-color: @body-highlight-color;
+      &:not(.disabled) {
+        &:hover {
+          background-color: @body-highlight-color;
+        }
+      }
+
+      &.disabled {
+        opacity: 0.5;
       }
     }
 
@@ -36,22 +42,21 @@
 
     .menu-item-content {
       display: flex;
-      padding: 0 @unit-height * 1.2;
       overflow: hidden;
     }
 
     .menu-item-label {
-      flex: 2;
+      flex: 3;
       text-overflow: ellipsis;
       overflow: hidden;
-      max-width: 250px;
+      padding: 0 @unit-height * 1.2;
     }
 
     .menu-item-shortcut {
       flex: 1;
       color: @secondary-text-color;
-      font-size: 0.9em;
       text-align: right;
+      padding-right: @unit-height * 1.2;
     }
 
     .menu-item-sub-menu-arrow {
