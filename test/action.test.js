@@ -52,17 +52,17 @@ describe('Action', () => {
     action.do.testAction(2);
 
     assert.equal(action.history.length, 3);
-    assert.equal(action.historyIndex, 3);
+    assert.equal(action.history.index, 3);
     assert.equal(action.state.squared, 4);
 
-    action.undo();
+    action.history.undo();
 
-    assert.equal(action.historyIndex, 2);
+    assert.equal(action.history.index, 2);
     assert.equal(action.state.squared, 9);
 
     action.do.testAction(5);
 
-    assert.equal(action.historyIndex, 3);
+    assert.equal(action.history.index, 3);
     assert.equal(action.state.squared, 25);
   });
 
@@ -74,10 +74,13 @@ describe('Action', () => {
     action.do.testAction(3);
     action.do.testAction(2);
 
-    action.undo();
-    action.redo();
+    action.history.undo();
 
-    assert.equal(action.historyIndex, 3);
+    assert.equal(action.history.canRedo(), true);
+
+    action.history.redo();
+
+    assert.equal(action.history.index, 3);
     assert.equal(action.state.squared, 4);
   });
 });

@@ -1,20 +1,68 @@
 import signals from 'signals';
 
+class ActionHistory {
+  constructor(restoreHandler) {
+    this.list = [];
+    // index means next position, so the current state is in this.list[this.index - 1].
+    this.index = 0;
+    this.restoreHandler = restoreHandler;
+  }
+
+  get length() {
+    return this.list.length;
+  }
+
+  push(name, state) {
+    this.list = this.list.slice(0, this.index);
+    this.list.push({
+      name,
+      state,
+      index: this.index,
+      time: Date.now()
+    });
+    this.index = this.list.length;
+  }
+
+  restore(index) {
+    if (index <= 0 || index > this.list.length || index === this.index) {
+      return;
+    }
+
+    this.restoreHandler(this.list[index - 1].state);
+    this.index = index;
+  }
+
+  undo() {
+    this.restore(this.index - 1);
+  }
+
+  redo() {
+    this.restore(this.index + 1);
+  }
+
+  canRedo() {
+    return this.index < this.list.length;
+  }
+
+  canUndo() {
+    return this.index > 1;
+  }
+}
+
 export default class Action {
   constructor(initialState = {}) {
     this.state = Object.assign({}, initialState);
-    this.history = [{
-      name: 'initialState',
-      index: 0,
-      time: Date.now(),
-      state: this.state
-    }];
-    this.historyIndex = 1;
     this.do = {};
     this.on = {
       stateChange: new signals.Signal(),
       error: new signals.Signal()
     };
+    this.history = new ActionHistory(state => {
+      this.state = state;
+      this.on.stateChange.dispatch(this.state);
+    });
+
+    this.history.push('initialState', this.state);
   }
 
   register(name, thunk, initialState = null) {
@@ -46,50 +94,13 @@ export default class Action {
     };
   }
 
-  canRedo() {
-    return this.historyIndex < this.history.length;
-  }
-
-  canUndo() {
-    return this.historyIndex > 0;
-  }
-
-  getRedos() {
-    return this.history.slice(this.historyIndex, this.history.length);
-  }
-
-  getUndos() {
-    return this.history.slice(0, this.historyIndex - 1);
-  }
-
-  redo() {
-    this.restore(this.historyIndex + 1);
-  }
-
-  undo() {
-    this.restore(this.historyIndex - 1);
-  }
-
-  restore(index) {
-    if (index <= 0 || index > this.history.length || index === this.historyIndex) {
+  pushState(handlerName, state) {
+    if (Object.keys(state).length === 0) {
       return;
     }
 
-    this.state = this.history[index - 1].state;
-    this.historyIndex = index;
-    this.on.stateChange.dispatch(this.state);
-  }
-
-  pushState(handlerName, state) {
-    this.history = this.history.slice(0, this.historyIndex);
-    this.history.push({
-      name: handlerName,
-      index: this.historyIndex,
-      time: Date.now(),
-      state
-    });
-    this.historyIndex = this.history.length;
     this.state = Object.assign({}, this.state, state);
+    this.history.push(handlerName, this.state);
     this.on[handlerName].dispatch(this.state);
     this.on.stateChange.dispatch(this.state);
   }
