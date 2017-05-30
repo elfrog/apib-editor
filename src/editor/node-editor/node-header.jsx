@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 
 export default class NodeHeader extends React.Component {
   static propTypes = {
-    node: PropTypes.any.isRequired,
+    activeNode: PropTypes.any.isRequired,
     onChange: PropTypes.func
   };
 
   constructor(props) {
     super(props);
 
-    let node = this.props.node;
+    let node = this.props.activeNode;
     
     this.state = {
       header: node.header,
@@ -19,16 +19,16 @@ export default class NodeHeader extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let node = nextProps.node;
+    let node = nextProps.activeNode;
 
-    this.setState({ header: node.header });
+    this.setState({ header: node.header, error: false });
   }
 
   onHeaderChange = e => {
     let value = e.target.value;
 
     try {
-      if (!this.props.node.constructor.canAcceptHeader(value)) {
+      if (!this.props.activeNode.constructor.canAcceptHeader(value)) {
         this.setState({ header: value, error: true });
         return;
       }
@@ -45,7 +45,7 @@ export default class NodeHeader extends React.Component {
   }
 
   render() {
-    let node = this.props.node;
+    let node = this.props.activeNode;
 
     return <div className={'apib-node-editor-header' + (this.state.error ? ' error' : '')}>
       <input type='text' value={this.state.header} onChange={this.onHeaderChange} />

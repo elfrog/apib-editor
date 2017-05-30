@@ -29,7 +29,8 @@ function getNodeTypeName(node) {
 
 export default class NodePropertyView extends React.Component {
   static propTypes = {
-    node: PropTypes.any.isRequired,
+    rootNode: PropTypes.any.isRequired,
+    activeNode: PropTypes.any.isRequired,
     onPropertyChange: PropTypes.func
   };
 
@@ -43,11 +44,18 @@ export default class NodePropertyView extends React.Component {
     }
   }
 
-  render() {
-    let node = this.props.node;
-    let urlElement = null;
-    let nodeTypeName = getNodeTypeName(node);
+  renderNameInput(node) {
     let autoFocus = node.name ? false : true;
+    return <Text
+      label='Name'
+      value={node.name}
+      onChange={value => this.onPropertyChange('name', value)}
+      autoFocus={autoFocus}
+    />;
+  }
+
+  renderUrlInput(node) {
+    let urlElement = null;
 
     if (node instanceof ActionNode) {
       if (node.url) {
@@ -57,36 +65,53 @@ export default class NodePropertyView extends React.Component {
           let url = node.urlInherited;
           urlElement = <Text label='URL' placeholder={url} onChange={value => this.onPropertyChange('url', value)} />;
         } catch (e) {
-          urlElement = <Text label='URL' placeholder={'url'} onChange={value => this.onPropertyChange('url', value)} />;
+          urlElement = <Text label='URL' placeholder={'type URL'} onChange={value => this.onPropertyChange('url', value)} />;
         }
       }
     } else if (node.hasOwnProperty('url')) {
       urlElement = <Text label='URL' value={node.url} onChange={value => this.onPropertyChange('url', value)} />;
     }
 
+    return urlElement;
+  }
+
+  renderActionInput(node) {
+    return <Select
+      label='Action'
+      value={node.action}
+      options={['GET', 'PUT', 'POST', 'DELETE', 'UPDATE']}
+      onChange={value => this.onPropertyChange('action', value)}
+    />;
+  }
+
+  renderModelTypeInput(node) {
+    let modelTypes = this.props.rootNode.flatten().filter(p => p instanceof ModelNode).map(p => p.name);
+
+    return <Select
+      label='Model Type'
+      value={node.modelType}
+      options={['object', 'enum', ...modelTypes]}
+      onChange={value => this.onPropertyChange('modelType', value)}
+    />;
+  }
+
+  render() {
+    let node = this.props.activeNode;
+    let nodeTypeName = getNodeTypeName(node);
+
     return <div className='apib-node-property-view property-view'>
       <h2 className='property-view-title'>{nodeTypeName}</h2>
 
-      <Text label='Name' value={node.name} onChange={value => this.onPropertyChange('name', value)} autoFocus={autoFocus} />
+      {this.renderNameInput(node)}
 
-      {urlElement}
+      {this.renderUrlInput(node)}
 
       {node instanceof ActionNode &&
-        <Select
-          label='Action'
-          value={node.action}
-          options={['GET', 'PUT', 'POST', 'DELETE', 'UPDATE']}
-          onChange={value => this.onPropertyChange('action', value)}
-        />
+        this.renderActionInput(node)
       }
 
       {node instanceof ModelNode &&
-        <Select
-          label='Model Type'
-          value={node.modelType}
-          options={['object', 'enum']}
-          onChange={value => this.onPropertyChange('modelType', value)}
-        />
+        this.renderModelTypeInput(node)
       }
     </div>;
   }

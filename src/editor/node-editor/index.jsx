@@ -14,7 +14,8 @@ import 'brace/keybinding/vim';
 
 export default class NodeEditor extends React.Component {
   static propTypes = {
-    node: PropTypes.any.isRequired,
+    rootNode: PropTypes.any.isRequired,
+    activeNode: PropTypes.any.isRequired,
     onPropertyChange: PropTypes.func
   };
 
@@ -24,26 +25,26 @@ export default class NodeEditor extends React.Component {
 
   onDescriptionChange = (value) => {
     if (this.props.onPropertyChange) {
-      this.props.onPropertyChange(this.props.node, 'description', value);
+      this.props.onPropertyChange(this.props.activeNode, 'description', value);
     }
   }
 
   onPropertyChange = (key, value) => {
     if (this.props.onPropertyChange) {
-      this.props.onPropertyChange(this.props.node, key, value);
+      this.props.onPropertyChange(this.props.activeNode, key, value);
     }
   }
 
   render() {
-    let node = this.props.node;
+    let node = this.props.activeNode;
     let source = node.description;
 
     return <div className='apib-node-editor'>
       <VPanelSplitter defaultLeftPanelSize={300}>
-        <NodePropertyView node={node} onPropertyChange={this.onPropertyChange} />
+        <NodePropertyView rootNode={this.props.rootNode} activeNode={node} onPropertyChange={this.onPropertyChange} />
 
         <div className='apib-node-editor-content'>
-          <NodeHeader node={node} onChange={value => this.onPropertyChange('header', value)} />
+          <NodeHeader activeNode={node} onChange={value => this.onPropertyChange('header', value)} />
           <AceEditor
             name='apibAceEditor'
             ref='ace'
