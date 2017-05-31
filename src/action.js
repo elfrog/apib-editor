@@ -1,4 +1,4 @@
-import signals from 'signals';
+import EventEmitter from 'eventemitter3';
 
 class ActionHistory {
   constructor(restoreHandler) {
@@ -49,17 +49,15 @@ class ActionHistory {
   }
 }
 
-export default class Action {
+export default class Action extends EventEmitter {
   constructor(initialState = {}) {
+    super();
+
     this.state = Object.assign({}, initialState);
     this.do = {};
-    this.on = {
-      stateChange: new signals.Signal(),
-      error: new signals.Signal()
-    };
     this.history = new ActionHistory(state => {
       this.state = state;
-      this.on.stateChange.dispatch(this.state);
+      this.emit('statechange', this.state);
     });
 
     this.history.push('initialState', this.state);
@@ -74,7 +72,6 @@ export default class Action {
       this.state = Object.assign({}, this.state, initialState);
     }
 
-    this.on[name] = new signals.Signal();
     this.do[name] = (...args) => {
       try {
         let result = thunk.apply(this.state, args);
@@ -83,13 +80,13 @@ export default class Action {
           result.then(actionState => {
             this.pushState(name, actionState);
           }).catch(e => {
-            this.on.error.dispatch(e);
+            this.emit('error', e);
           });
         } else {
           this.pushState(name, result);
         }
       } catch (e) {
-        this.on.error.dispatch(e);
+        this.emit('error', e);
       }
     };
   }
@@ -101,7 +98,6 @@ export default class Action {
 
     this.state = Object.assign({}, this.state, state);
     this.history.push(handlerName, this.state);
-    this.on[handlerName].dispatch(this.state);
-    this.on.stateChange.dispatch(this.state);
+    this.emit('statechange', this.state);
   }
 }

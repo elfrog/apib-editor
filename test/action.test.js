@@ -1,5 +1,4 @@
 import assert from 'assert';
-import signals from 'signals';
 import Action from '../src/action';
 
 function testAction(value) {
@@ -19,9 +18,8 @@ describe('Action', () => {
     action.register('testAction', testAction);
 
     assert.equal(typeof action.do['testAction'], 'function');
-    assert.ok(action.on['testAction'] instanceof signals.Signal);
 
-    action.on.testAction.add(function (state) {
+    action.on('statechange', function (state) {
       assert.equal(state.squared, 9);
     });
 
@@ -34,7 +32,7 @@ describe('Action', () => {
     action.register('testAsyncAction', testAsyncAction);
 
     return new Promise(resolve => {
-      action.on.testAsyncAction.add(function (state) {
+      action.on('statechange', function (state) {
         assert.equal(state.squared, 9);
         resolve();
       });
