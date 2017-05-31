@@ -44,6 +44,12 @@ export function getMenuItems(action) {
         commands.undo,
         commands.redo
       ])
+    },
+    {
+      label: 'Help',
+      onClick: openMenu(action, [
+        commands.showStartPage
+      ])
     }
   ];
 }
