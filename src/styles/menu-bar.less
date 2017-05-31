@@ -2,13 +2,12 @@
 .menu-bar {
   width: 100%;
   overflow: hidden;
-  box-shadow: 0px 1px 3px darken(@body-color, 10%);
 
   .menu-bar-separator {
     float: left;
     width: 1px;
-    height: @unit-height - 6px;
-    margin: 3px @unit-margin;
+    height: @unit-height - @unit-margin;
+    margin: (@unit-margin / 2) @unit-margin;
     border-left: 1px solid @body-highlight-color;
   }
 
