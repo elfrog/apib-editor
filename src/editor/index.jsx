@@ -6,6 +6,7 @@ import ContextMenu from './components/context-menu';
 import DragAndDrop from './components/drag-and-drop';
 import Toast from './components/toast';
 import MenuBar from './components/menu-bar';
+import Modal from './components/modal';
 
 import StartPage from './start-page';
 
@@ -18,14 +19,16 @@ import { editorCommands } from './editor-commands';
 import { getMenuItems } from './editor-menu';
 
 EditorRepository.defaultValues = {
-  'editor.saved.data': null,
-  'editor.saved.name': null,
+  'editor.saved.data': '',
+  'editor.saved.name': '',
   'editor.ui.nodeListPanelSize': 300,
   'editor.ui.nodePropertyViewPanelSize': 300,
-  'editor.options.vimMode': false,
-  'editor.options.font': 'Consolas, Monaco',
-  'editor.options.fontSize': 14,
-  'editor.options.theme': 'Solarized Dark'
+  'editor.settings': {
+    vimMode: false,
+    font: 'Consolas, Monaco',
+    fontSize: 14,
+    theme: 'Solarized Dark'
+  }
 };
 
 export default class Editor extends React.Component {
@@ -110,7 +113,7 @@ export default class Editor extends React.Component {
       <div className='apib-editor-content'>      
         {activeNode &&
           <VPanelSplitter
-            defaultLeftPanelSize={EditorRepository.getItemAsNumber('editor.ui.nodeListPanelSize')}
+            defaultLeftPanelSize={EditorRepository.getItem('editor.ui.nodeListPanelSize')}
             onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodeListPanelSize', size)}
           >
             <NodeList
@@ -130,14 +133,9 @@ export default class Editor extends React.Component {
             />
           </VPanelSplitter>
         }
-
-        {activeNode === null &&
-          <StartPage
-            onOpenFile={this.action.do.loadFromFile}
-            onNewFile={this.action.do.openNewDocument}
-          />
-        }
       </div>
+
+      <StartPage action={this.action} />
 
       <ContextMenu />
       <DragAndDrop />

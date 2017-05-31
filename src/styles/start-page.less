@@ -1,19 +1,27 @@
 
 .apib-start-page {
-  .full-layout();
-
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-flow: column;
+  overflow-y: auto;
+
+  h1 {
+    margin: @unit-margin 0;
+    padding: @unit-margin;
+    font-size: 1.5em;
+    text-align: center;
+    border-bottom: 1px solid @body-highlight-color;
+  }
 }
 
 .apib-start-box {
   width: 400px;
-  text-align: center;
+  margin: @unit-margin;
 
   p {
     padding: 0px;
     font-size: 0.5em;
+    text-align: center;
   }
 
   button {
@@ -25,10 +33,10 @@
     color: @primary-text-color;
     cursor: pointer;
     font-size: 3em;
+    text-align: center;
 
     &:hover {
       background-color: @body-highlight-color;
-      color: @blue;
     }
   }
 }
@@ -38,4 +46,23 @@
 }
 
 .apib-start-new-file {
+}
+
+.apib-start-example-box {
+  width: 400px;
+  margin: @unit-margin;
+
+  li {
+    height: @unit-height;
+    line-height: @unit-height;
+    padding: 0 @unit-margin;
+
+    &:hover {
+      background-color: @body-highlight-color;
+    }
+  }
+
+  a {
+    cursor: pointer;
+  }
 }

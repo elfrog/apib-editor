@@ -1,3 +1,4 @@
+
 export let editorCommands = {
   newDocument: {
     label: 'New',
@@ -25,7 +26,7 @@ export let editorCommands = {
     shortcut: 'Ctrl+S',
     disabled: action => !action.state.rootNode,
     onAction: action => {
-      let content = Aaction.state.rootNode.asString();
+      let content = action.state.rootNode.asString();
       let blob = new Blob([content], { type: 'text/plain' });
       let url = window.URL.createObjectURL(blob);
       let a = document.createElement('a');
@@ -46,5 +47,11 @@ export let editorCommands = {
     shortcut: 'Ctrl+Y',
     disabled: action => !action.history.canRedo(),
     onAction: action => action.history.redo()
+  },
+  showStartPage: {
+    label: 'Start Page',
+    onAction: action => {
+      action.emit('editor.showStartPage');
+    }
   }
 };
