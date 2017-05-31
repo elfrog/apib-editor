@@ -22,11 +22,12 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.action.on.stateChange.add((state) => {
+    this.action.on('statechange', (state) => {
       this.setState(state);
     });
-    this.action.on.error.add(e => {
+    this.action.on('error', e => {
       Toast.error(e.message);
+      console.error(e);
     });
   }
 
