@@ -43,7 +43,7 @@ export default class NodeEditor extends React.Component {
 
     return <div className='apib-node-editor'>
       <VPanelSplitter
-        defaultLeftPanelSize={EditorRepository.getItemAsNumber('editor.ui.nodePropertyViewPanelSize')}
+        defaultLeftPanelSize={EditorRepository.getItem('editor.ui.nodePropertyViewPanelSize')}
         onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodePropertyViewPanelSize', size)}
       >
         <NodePropertyView rootNode={this.props.rootNode} activeNode={node} onPropertyChange={this.onPropertyChange} />
