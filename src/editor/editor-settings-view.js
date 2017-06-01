@@ -50,7 +50,7 @@ export default class EditorSettingsView extends React.Component {
 
     return <Modal open={this.state.open} header='Settings' onClose={this.closeModal}>
       <PropertyView>
-        <Text label='Font' autoFocus={this.state.open} value={settings.font} onChange={value => this.onSettingChange('font', value)} />
+        <Text label='Font' value={settings.font} onChange={value => this.onSettingChange('font', value)} />
         <Number label='Font Size' value={settings.fontSize} onChange={value => this.onSettingChange('fontSize', value)} />
         <Select
           label='Theme'
