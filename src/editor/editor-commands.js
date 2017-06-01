@@ -53,5 +53,11 @@ export let editorCommands = {
     onAction: action => {
       action.emit('editor.showStartPage');
     }
+  },
+  showSettingsView: {
+    label: 'Settings',
+    onAction: action => {
+      action.emit('editor.showSettingsView');
+    }
   }
 };
