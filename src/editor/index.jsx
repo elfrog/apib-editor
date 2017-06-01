@@ -35,8 +35,6 @@ EditorRepository.defaultValues = {
   }
 };
 
-SolarizedDarkTheme.use();
-
 export default class Editor extends React.Component {
   constructor(props) {
     super(props);
