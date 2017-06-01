@@ -8,15 +8,19 @@ import Toast from './components/toast';
 import MenuBar from './components/menu-bar';
 import Modal from './components/modal';
 
-import StartPage from './start-page';
-
 import NodeList from './node-list';
 import NodeEditor from './node-editor';
+
+import StartPage from './start-page';
+import EditorSettingsView from './editor-settings-view';
 
 import EditorRepository from './editor-repository';
 
 import { editorCommands } from './editor-commands';
 import { getMenuItems } from './editor-menu';
+
+import SolarizedDarkTheme from '../styles/themes/solarized-dark.less';
+import SolarizedLightTheme from '../styles/themes/solarized-light.less';
 
 EditorRepository.defaultValues = {
   'editor.saved.data': '',
@@ -31,12 +35,20 @@ EditorRepository.defaultValues = {
   }
 };
 
+SolarizedDarkTheme.use();
+
 export default class Editor extends React.Component {
   constructor(props) {
     super(props);
 
     this.action = props.action;
     this.menuItems = getMenuItems(this.action);
+
+    this.state = {
+      settings: EditorRepository.getItem('editor.settings')
+    };
+
+    this.changeTheme(this.state.settings.theme);
   }
 
   componentDidMount() {
@@ -60,6 +72,25 @@ export default class Editor extends React.Component {
       EditorRepository.setItem('editor.saved.data', data);
       EditorRepository.setItem('editor.saved.name', rootNode.name);
     }
+  }
+
+  changeTheme(themeName) {
+    if (themeName === 'Solarized Dark') {
+      SolarizedLightTheme.unuse();
+      SolarizedDarkTheme.use();
+    } else {
+      SolarizedDarkTheme.unuse();
+      SolarizedLightTheme.use();
+    }
+  }
+
+  onSettingsChange = settings => {
+    if (this.state.settings.theme !== settings.theme) {
+      this.changeTheme(settings.theme);
+    }
+
+    EditorRepository.setItem('editor.settings', settings);
+    this.setState({ settings });
   }
 
   onKeyDown = e => {
@@ -129,6 +160,7 @@ export default class Editor extends React.Component {
             <NodeEditor
               rootNode={this.props.rootNode}
               activeNode={activeNode}
+              settings={this.state.settings}
               onPropertyChange={this.action.do.changeNodeProperty}
             />
           </VPanelSplitter>
@@ -136,6 +168,12 @@ export default class Editor extends React.Component {
       </div>
 
       <StartPage action={this.action} />
+
+      <EditorSettingsView
+        action={this.action}
+        settings={this.state.settings}
+        onChange={this.onSettingsChange}
+      />
 
       <ContextMenu />
       <DragAndDrop />

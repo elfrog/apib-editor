@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import './styles/main.less';
-
 import Action from './action';
 import Editor from './editor';
 import Toast from './editor/components/toast';
