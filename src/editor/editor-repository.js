@@ -26,6 +26,10 @@ export default class EditorRepository {
     let value = EditorRepository.getRawItem(key);
     let defaultValue = EditorRepository.getDefaultValue(key);
 
+    if (value === undefined) {
+      return defaultValue;
+    }
+
     switch (typeof defaultValue) {
     case 'string': return value;
     case 'number': return Number(value);
