@@ -12,12 +12,19 @@ import AceEditor from 'react-ace';
 
 import 'brace/mode/markdown';
 import 'brace/theme/solarized_dark';
+import 'brace/theme/solarized_light';
 import 'brace/keybinding/vim';
+
+const ACE_THEMES = {
+  'Solarized Dark': 'solarized_dark',
+  'Solarized Light': 'solarized_light',
+};
 
 export default class NodeEditor extends React.Component {
   static propTypes = {
     rootNode: PropTypes.any.isRequired,
     activeNode: PropTypes.any.isRequired,
+    settings: PropTypes.any.isRequired,
     onPropertyChange: PropTypes.func
   };
 
@@ -40,6 +47,7 @@ export default class NodeEditor extends React.Component {
   render() {
     let node = this.props.activeNode;
     let source = node.description;
+    let settings = this.props.settings;
 
     return <div className='apib-node-editor'>
       <VPanelSplitter
@@ -55,15 +63,15 @@ export default class NodeEditor extends React.Component {
               name='apibAceEditor'
               ref='ace'
               mode='markdown'
-              theme='solarized_dark'
+              theme={ACE_THEMES[settings.theme]}
               width='100%'
               height='100%'
-              style={{ fontFamily: 'Consolas, Monaco' }}
-              fontSize={14}
+              style={{ fontFamily: settings.font }}
+              fontSize={settings.fontSize}
               tabSize={4}
               useSoftTabs={true}
               wrapEnabled={true}
-              keyboardHandler='vim'
+              keyboardHandler={settings.vimMode ? 'vim' : ''}
               editorProps={{$blockScrolling: Infinity}}
               value={source}
               onChange={this.onDescriptionChange}
