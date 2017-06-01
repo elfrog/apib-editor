@@ -1,12 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-export default class Text extends React.Component {
+export default class Number extends React.Component {
   static propTypes = {
     label: PropTypes.string,
-    type: PropTypes.string,
     placeholder: PropTypes.string,
-    value: PropTypes.string,
+    value: PropTypes.any,
+    min: PropTypes.number,
+    max: PropTypes.number,
+    step: PropTypes.number,
     autoFocus: PropTypes.bool,
     onChange: PropTypes.func
   };
@@ -33,22 +35,25 @@ export default class Text extends React.Component {
     let value = e.target.value;
 
     if (this.props.onChange) {
-      this.props.onChange(value);
+      this.props.onChange(parseInt(value));
     }
 
     this.setState({ value });
   }
 
   render() {
-    return <div className='property-control text'>
+    return <div className='property-control number'>
       <label>
         <div className='label'>
           {this.props.label || ''}
         </div>
         <div className='control'>
           <input
-            type={this.props.type || 'text'}
+            type='number'
             value={this.state.value || ''}
+            min={this.props.min}
+            max={this.props.max}
+            step={this.props.step}
             ref={input => this.input = input}
             placeholder={this.props.placeholder || ''}
             onChange={this.onValueChange}

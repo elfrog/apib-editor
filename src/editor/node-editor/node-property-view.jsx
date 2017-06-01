@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import PropertyView from '../components/property-view';
 import Text from '../components/property-controls/text';
 import Select from '../components/property-controls/select';
 
@@ -99,9 +100,7 @@ export default class NodePropertyView extends React.Component {
     let node = this.props.activeNode;
     let nodeTypeName = getNodeTypeName(node);
 
-    return <div className='apib-node-property-view property-view'>
-      <h2 className='property-view-title'>{nodeTypeName}</h2>
-
+    return <PropertyView header={nodeTypeName}>
       {this.renderNameInput(node)}
 
       {this.renderUrlInput(node)}
@@ -113,6 +112,6 @@ export default class NodePropertyView extends React.Component {
       {node instanceof ModelNode &&
         this.renderModelTypeInput(node)
       }
-    </div>;
+    </PropertyView>;
   }
 }

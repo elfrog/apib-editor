@@ -39,7 +39,7 @@ export default class Select extends React.Component {
         <option key={'option-' + option.value} value={option.value}>{option.name}</option> 
     ) : [];
 
-    return <div className='property-control'>
+    return <div className='property-control select'>
       <label>
         <div className='label'>
           {this.props.label || ''}

@@ -13,6 +13,7 @@
     width: 100%;
     height: @unit-height;
     line-height: @unit-height;
+    margin: 0;
     padding: 0 (@unit-margin / 2);
   }
 
@@ -23,7 +24,39 @@
     padding: 0 3px;
     border: 0;
     border-radius: 0;
-    background-color: @body-highlight-color;
-    color: @body-text-color;
+  }
+}
+
+.property-control.checkbox {
+  .control {
+    position: relative;
+    width: @unit-height;
+    height: @unit-height;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  input {
+    visibility: hidden;
+  }
+
+  .checker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: @unit-height;
+    height: @unit-height;
+    line-height: @unit-height;
+    text-align: center;
+    transition: all 300ms;
+    opacity: 0;
+
+    svg {
+      font-size: 1.3em;
+    }
+  }
+
+  input:checked + .checker {
+    opacity: 1;
   }
 }
