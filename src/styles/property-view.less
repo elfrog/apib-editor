@@ -1,10 +1,12 @@
 
 .property-view {
-  .full-layout();
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background-color: darken(@body-color, 5%);
 }
 
-.property-view-title {
+.property-view-header {
   height: @unit-height;
   line-height: @unit-height;
   margin: 0;
@@ -12,4 +14,8 @@
   font-size: 1em;
   font-weight: bold;
   background-color: @body-color;
+}
+
+.property-view-body {
+  overflow: hidden;
 }

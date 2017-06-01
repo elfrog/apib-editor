@@ -1,0 +1,53 @@
+@import './reset';
+
+html {
+  background-color: @body-color;
+  color: @body-text-color;
+  font-family: Consolas, Monaco;
+  font-size: 14px;
+
+  a, a:active, a:visited {
+    text-decoration: none;
+    color: @primary-text-color;
+  }
+}
+
+input, select, .control {
+  font-family: Consolas;
+  font-size: 14px;
+  height: @unit-height;
+  border: 0;
+  border-radius: 0;
+  background-color: lighten(@body-color, 5%);
+  color: @body-text-color;
+}
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: @unit-height / 2;
+  height: @unit-height / 2;
+}
+
+::-webkit-scrollbar-track {
+  background-color: @body-color;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: @secondary-text-color;
+  border: 1px solid @secondary-text-color;
+  border-radius: 0;
+
+  &:hover, &:active {
+    border: 1px solid @blue;
+    background-color: @blue;
+  }
+}
+
+.full-layout(@margin: 0px) {
+  position: absolute;
+  top: @margin;
+  left: @margin;
+  right: @margin;
+  bottom: @margin;
+}
