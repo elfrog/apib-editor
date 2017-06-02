@@ -5,13 +5,19 @@ export default function removeChildNode(parent, child) {
   }
 
   let rootNode = this.rootNode.clone();
+  let activeNodeId = this.activeNodeId;
   let changeParent = rootNode.findNodeById(parent.id);
   let changeChild = rootNode.findNodeById(child.id);
 
   changeParent.removeChild(changeChild);
 
+  // change active node with parent node if active node is one of deletions
+  if (parent.findNodeById(activeNodeId)) {
+    activeNodeId = parent.id;
+  }
+
   return {
     rootNode,
-    activeNodeId: this.activeNodeId === child.id ? parent.id : this.activeNodeId
+    activeNodeId
   };
 }
