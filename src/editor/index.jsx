@@ -18,6 +18,7 @@ import EditorRepository from './editor-repository';
 
 import { editorCommands } from './editor-commands';
 import { getMenuItems } from './editor-menu';
+import { getShortcutString } from '../common/key-utils';
 
 import SolarizedDarkTheme from '../styles/themes/solarized-dark.less';
 import SolarizedLightTheme from '../styles/themes/solarized-light.less';
@@ -92,27 +93,7 @@ export default class Editor extends React.Component {
   }
 
   onKeyDown = e => {
-    let keys = [];
-
-    if (e.altKey) {
-      keys.push('Alt');
-    }
-
-    if (e.ctrlKey) {
-      keys.push('Ctrl');
-    }
-
-    if (e.shiftKey) {
-      keys.push('Shift');
-    }
-
-    if (keys.length === 0) {
-      return;
-    }
-
-    keys.push(e.key.toUpperCase());
-
-    let shortcut = keys.join('+');
+    let shortcut = getShortcutString(e);
 
     for (let commandName in editorCommands) {
       let command = editorCommands[commandName];
