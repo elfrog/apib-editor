@@ -14,18 +14,20 @@ class App extends React.Component {
     this.state = Object.assign({}, initialState);
     this.action = new Action(initialState);
 
+    this.setup();
+  }
+
+  setup() {
     for (let action of actions) {
       this.action.register(action.name, action);
     }
-  }
 
-  componentDidMount() {
     this.action.on('statechange', (state) => {
       this.setState(state);
     });
+
     this.action.on('error', e => {
       Toast.error(e.message);
-      console.error(e);
     });
   }
 
