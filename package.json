@@ -2,11 +2,15 @@
   "name": "apib-editor",
   "version": "1.0.0",
   "description": "simple api-blueprint editor.",
-  "main": "dist/app.js",
+  "main": "http://localhost:8080",
+  "webkit": {
+    "plugin": true
+  },
   "scripts": {
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
     "dev": "webpack-dev-server",
-    "build": "webpack"
+    "build": "webpack",
+    "start": "npm run build & nw ./build"
   },
   "repository": {
     "type": "git",

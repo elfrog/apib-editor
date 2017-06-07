@@ -2,10 +2,13 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-  entry: ['babel-polyfill', './src/index.jsx'],
+  entry: [
+    'babel-polyfill',
+    './src/index.jsx'
+  ],
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'app.js'
+    filename: 'bundle.js'
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -26,10 +29,12 @@ module.exports = {
   devServer: {
     hot: true,
     contentBase: path.resolve(__dirname, 'build'),
-    publicPath: '/'
+    publicPath: '/',
+    port: 8080
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NamedModulesPlugin()
+    new webpack.NamedModulesPlugin(),
+    new webpack.NoEmitOnErrorsPlugin()
   ]
 };
