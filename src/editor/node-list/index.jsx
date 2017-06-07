@@ -37,6 +37,13 @@ export default class NodeList extends React.Component {
     super(props);
 
     this.filterTimer = null;
+    this.state = { filterText: '' };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.filter !== nextProps.filter) {
+      this.setState({ filterText: nextProps.filter });
+    }
   }
 
   onFilterTextChanged = e => {
@@ -54,6 +61,8 @@ export default class NodeList extends React.Component {
       this.props.onFilter(value);
       this.filterTimer = null;
     }, FILTER_DELAY);
+
+    this.setState({ filterText: value });
   }
 
   onItemSelect = (node) => {
@@ -78,7 +87,13 @@ export default class NodeList extends React.Component {
     );
 
     return <div className='apib-node-list'>
-      <input className='apib-node-list-filter' type='text' placeholder='search...' onChange={this.onFilterTextChanged} />
+      <input
+        className='apib-node-list-filter'
+        type='text'
+        placeholder='search...'
+        value={this.state.filterText}
+        onChange={this.onFilterTextChanged}
+      />
       <div className='apib-node-list-items'>
         {nodeItems}
       </div>
