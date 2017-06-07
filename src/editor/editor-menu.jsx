@@ -8,8 +8,9 @@ const EDITOR_MENU = [
     "label": "File",
     "items": [
       "newDocument",
-      "openFromFile",
+      "openFile",
       null,
+      "saveFile",
       "downloadFile"
     ]
   },

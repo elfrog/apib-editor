@@ -5,25 +5,22 @@ export let editorCommands = {
     shortcut: 'Ctrl+N',
     onAction: action => action.do.openNewDocument()
   },
-  openFromFile: {
+  openFile: {
     label: 'Open From File',
     shortcut: 'Ctrl+O',
     onAction: action => {
-      let input = document.createElement('input');
-      input.type = 'file';
-      input.onchange = e => {
-        let file = e.target.files[0];
-
-        if (file) {
-          action.do.loadFromFile(file);
-        }
-      };
-      input.click();
+      action.do.openFile();
+    }
+  },
+  saveFile: {
+    label: 'Save',
+    shortcut: 'Ctrl+S',
+    onAction: action => {
+      action.do.saveFile();
     }
   },
   downloadFile: {
     label: 'Download File',
-    shortcut: 'Ctrl+S',
     disabled: action => !action.state.rootNode,
     onAction: action => {
       let content = action.state.rootNode.asString();
@@ -51,13 +48,13 @@ export let editorCommands = {
   showStartPage: {
     label: 'Start Page',
     onAction: action => {
-      action.emit('editor.showStartPage');
+      action.emit('editor:showStartPage');
     }
   },
   showSettingsView: {
     label: 'Settings',
     onAction: action => {
-      action.emit('editor.showSettingsView');
+      action.emit('editor:showSettingsView');
     }
   }
 };
