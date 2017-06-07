@@ -1,6 +1,6 @@
 
 export default function addChildNode(parent, child) {
-  let rootNode = this.rootNode.clone();
+  let rootNode = this.state.rootNode.clone();
   let changeParent = rootNode.findNodeById(parent.id);
 
   child.depth = parent.depth + 1;

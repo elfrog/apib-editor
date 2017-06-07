@@ -4,8 +4,8 @@ export default function removeChildNode(parent, child) {
     return {};
   }
 
-  let rootNode = this.rootNode.clone();
-  let activeNodeId = this.activeNodeId;
+  let rootNode = this.state.rootNode.clone();
+  let activeNodeId = this.state.activeNodeId;
   let changeParent = rootNode.findNodeById(parent.id);
   let changeChild = rootNode.findNodeById(child.id);
 

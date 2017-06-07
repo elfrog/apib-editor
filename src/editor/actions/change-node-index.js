@@ -4,7 +4,7 @@ export default function changeNodeIndex(node, id) {
     return {};
   }
 
-  let rootNode = this.rootNode.clone();
+  let rootNode = this.state.rootNode.clone();
   let changeNode = rootNode.findNodeById(node.id);
   let targetNode = rootNode.findNodeById(id);
 

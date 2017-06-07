@@ -10,7 +10,7 @@ export default function changeNodeProperty(node, key, value) {
 
   return new Promise(resolve => {
     timer = setTimeout(() => {
-      let rootNode = this.rootNode.clone();
+      let rootNode = this.state.rootNode.clone();
       let changeNode = rootNode.findNodeById(node.id);
 
       changeNode[key] = value;
