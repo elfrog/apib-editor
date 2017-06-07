@@ -4,6 +4,7 @@ import loadFromFile from './load-from-file';
 import loadFromRepository from './load-from-repository';
 import openFile from './open-file';
 import openRemoteFile from './open-remote-file';
+import saveFile from './save-file';
 import filterNodeList from './filter-node-list';
 import selectNode from './select-node';
 import changeNodeProperty from './change-node-property';
@@ -17,6 +18,7 @@ export let actions = [
   loadFromRepository,
   openFile,
   openRemoteFile,
+  saveFile,
   filterNodeList,
   selectNode,
   changeNodeProperty,
