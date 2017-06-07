@@ -65,11 +65,11 @@ export default class StartPage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.action.on('editor.showStartPage', this.openModal);
+    this.props.action.on('editor:showStartPage', this.openModal);
   }
 
   componentWillUnmount() {
-    this.props.action.off('editor.showStartPage', this.openModal);
+    this.props.action.off('editor:showStartPage', this.openModal);
   }
 
   openModal = () => {
@@ -80,48 +80,19 @@ export default class StartPage extends React.Component {
     this.setState({ open: false });
   }
 
-  openFile = file => {
-    this.props.action.do.loadFromFile(file);
+  onOpenFile = async () => {
+    await this.props.action.do.openFile();
     this.closeModal();
   }
 
-  newFile = () => {
+  onNewFile = () => {
     this.props.action.do.openNewDocument();
     this.closeModal();
   }
 
-  onFileOpen = e => {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = e => {
-      let file = e.target.files[0];
-
-      if (file) {
-        this.openFile(file);
-      }
-    };
-    input.click();
-  }
-
-  onExampleClick = example => {
-    let xhr = new XMLHttpRequest();
-
-    xhr.open('get', example.url, true);
-    xhr.responseType = 'text';
-    xhr.onload = e => {
-      if (xhr.status == 200) {
-        let content = xhr.response;
-        let file = new File([content], example.name + '.md', {
-          type: 'text/plain'
-        });
-
-        this.openFile(file);
-      } else {
-        Toast.error(e.message);
-        console.error(e);
-      }
-    };
-    xhr.send();
+  onExampleClick = async example => {
+    await this.props.action.do.openRemoteFile(example.name + '.md', example.url);
+    this.closeModal();
   }
   
   render() {
@@ -133,11 +104,11 @@ export default class StartPage extends React.Component {
       <div className='apib-start-page'>
         <div className='apib-start-box'>
           <h1>APIB Editor for API Blueprint</h1>
-          <button className='apib-start-open-file' onClick={this.onFileOpen}>
+          <button className='apib-start-open-file' onClick={this.onOpenFile}>
             <FaFolderOpenO />
             <p>open your file</p>
           </button>
-          <button className='apib-start-new-file' onClick={this.newFile}>
+          <button className='apib-start-new-file' onClick={this.onNewFile}>
             <FaFileO />
             <p>or make new</p>
           </button>

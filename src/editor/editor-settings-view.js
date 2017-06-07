@@ -22,11 +22,11 @@ export default class EditorSettingsView extends React.Component {
   }
 
   componentDidMount() {
-    this.props.action.on('editor.showSettingsView', this.openModal);
+    this.props.action.on('editor:showSettingsView', this.openModal);
   }
 
   componentWillUnmount() {
-    this.props.action.off('editor.showSettingsView', this.openModal);
+    this.props.action.off('editor:showSettingsView', this.openModal);
   }
 
   openModal = () => {
