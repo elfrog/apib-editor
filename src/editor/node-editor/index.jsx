@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import EditorRepository from '../editor-repository';
+import StorageService from 'platform/storage-service';
 
 import VPanelSplitter from '../components/v-panel-splitter';
 import NodePropertyView from './node-property-view';
@@ -51,8 +51,8 @@ export default class NodeEditor extends React.Component {
 
     return <div className='apib-node-editor'>
       <VPanelSplitter
-        defaultLeftPanelSize={EditorRepository.getItem('editor.ui.nodePropertyViewPanelSize')}
-        onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodePropertyViewPanelSize', size)}
+        defaultLeftPanelSize={StorageService.get('editor.ui.nodePropertyViewPanelSize')}
+        onPanelSizeChange={size => StorageService.set('editor.ui.nodePropertyViewPanelSize', size)}
       >
         <NodePropertyView rootNode={this.props.rootNode} activeNode={node} onPropertyChange={this.onPropertyChange} />
 

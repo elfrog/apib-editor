@@ -1,14 +1,14 @@
 import ApibParser from '../../parser/apib-parser';
-import EditorRepository from '../editor-repository';
+import StorageService from 'platform/storage-service';
 
 export default async function loadFromRepository() {
-  let savedData = EditorRepository.getItem('editor.saved.data');
+  let savedData = StorageService.get('editor.saved.data');
 
   if (!savedData) {
     return {};
   }
 
-  let savedName = EditorRepository.getItem('editor.saved.name');
+  let savedName = StorageService.get('editor.saved.name');
   let parser = new ApibParser();
   let root = await parser.parse(savedData);
   

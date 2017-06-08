@@ -14,7 +14,7 @@ import NodeEditor from './node-editor';
 import StartPage from './start-page';
 import EditorSettingsView from './editor-settings-view';
 
-import EditorRepository from './editor-repository';
+import StorageService from 'platform/storage-service';
 
 import { editorCommands } from './editor-commands';
 import { getMenuItems } from './editor-menu';
@@ -23,7 +23,8 @@ import { getShortcutString } from '../common/key-utils';
 import SolarizedDarkTheme from '../styles/themes/solarized-dark.less';
 import SolarizedLightTheme from '../styles/themes/solarized-light.less';
 
-EditorRepository.defaultValues = {
+// Set default storage values.
+StorageService.setValues({
   'editor.saved.data': '',
   'editor.saved.name': '',
   'editor.ui.nodeListPanelSize': 300,
@@ -34,7 +35,7 @@ EditorRepository.defaultValues = {
     fontSize: 14,
     theme: 'Solarized Dark'
   }
-};
+});
 
 export default class Editor extends React.Component {
   constructor(props) {
@@ -44,17 +45,26 @@ export default class Editor extends React.Component {
     this.menuItems = getMenuItems(this.action);
 
     this.state = {
-      settings: EditorRepository.getItem('editor.settings')
+      settings: StorageService.get('editor.settings'),
+      loading: true
     };
-
-    this.changeTheme(this.state.settings.theme);
   }
 
   componentDidMount() {
     window.addEventListener('beforeunload', this.storeEditorState);
     document.addEventListener('keydown', this.onKeyDown);
 
-    this.action.do.loadFromRepository();
+    StorageService.load().then(() => {
+      let settings = StorageService.get('editor.settings'); 
+
+      this.setState({
+        settings, 
+        loading: false
+      });
+
+      this.action.do.loadFromRepository();
+      this.changeTheme(settings.theme);
+    });
   }
 
   componentWillUnmount() {
@@ -68,9 +78,11 @@ export default class Editor extends React.Component {
     if (rootNode) {
       let data = rootNode.asString();
 
-      EditorRepository.setItem('editor.saved.data', data);
-      EditorRepository.setItem('editor.saved.name', rootNode.name);
+      StorageService.set('editor.saved.data', data);
+      StorageService.set('editor.saved.name', rootNode.name);
     }
+
+    StorageService.save();
   }
 
   changeTheme(themeName) {
@@ -88,7 +100,9 @@ export default class Editor extends React.Component {
       this.changeTheme(settings.theme);
     }
 
-    EditorRepository.setItem('editor.settings', settings);
+    StorageService.set('editor.settings', settings);
+    StorageService.save();
+
     this.setState({ settings });
   }
 
@@ -116,43 +130,47 @@ export default class Editor extends React.Component {
     let activeNode = this.props.rootNode ? this.props.rootNode.findNodeById(this.props.activeNodeId) : null;
 
     return <div className='apib-editor'>
-      <div className='apib-editor-menu'>
-        <MenuBar items={this.menuItems} />
-      </div>
+      {this.state.loading === false && 
+        <div>
+          <div className='apib-editor-menu'>
+            <MenuBar items={this.menuItems} />
+          </div>
 
-      <div className='apib-editor-content'>      
-        {activeNode &&
-          <VPanelSplitter
-            defaultLeftPanelSize={EditorRepository.getItem('editor.ui.nodeListPanelSize')}
-            onPanelSizeChange={size => EditorRepository.setItem('editor.ui.nodeListPanelSize', size)}
-          >
-            <NodeList
-              rootNode={this.props.rootNode}
-              activeNode={activeNode}
-              filter={this.props.nodeListFilter}
-              onFilter={this.action.do.filterNodeList}
-              onSelect={this.action.do.selectNode}
-              onAddNode={this.action.do.addChildNode}
-              onRemoveNode={this.action.do.removeChildNode}
-              onChangeNodeIndex={this.action.do.changeNodeIndex}
-            />
-            <NodeEditor
-              rootNode={this.props.rootNode}
-              activeNode={activeNode}
-              settings={this.state.settings}
-              onPropertyChange={this.action.do.changeNodeProperty}
-            />
-          </VPanelSplitter>
-        }
-      </div>
+          <div className='apib-editor-content'>      
+            {activeNode &&
+              <VPanelSplitter
+                defaultLeftPanelSize={StorageService.get('editor.ui.nodeListPanelSize')}
+                onPanelSizeChange={size => StorageService.set('editor.ui.nodeListPanelSize', size)}
+              >
+                <NodeList
+                  rootNode={this.props.rootNode}
+                  activeNode={activeNode}
+                  filter={this.props.nodeListFilter}
+                  onFilter={this.action.do.filterNodeList}
+                  onSelect={this.action.do.selectNode}
+                  onAddNode={this.action.do.addChildNode}
+                  onRemoveNode={this.action.do.removeChildNode}
+                  onChangeNodeIndex={this.action.do.changeNodeIndex}
+                />
+                <NodeEditor
+                  rootNode={this.props.rootNode}
+                  activeNode={activeNode}
+                  settings={this.state.settings}
+                  onPropertyChange={this.action.do.changeNodeProperty}
+                />
+              </VPanelSplitter>
+            }
+          </div>
 
-      <StartPage action={this.action} />
+          <StartPage action={this.action} />
 
-      <EditorSettingsView
-        action={this.action}
-        settings={this.state.settings}
-        onChange={this.onSettingsChange}
-      />
+          <EditorSettingsView
+            action={this.action}
+            settings={this.state.settings}
+            onChange={this.onSettingsChange}
+          />
+        </div>
+      }
 
       <ContextMenu />
       <DragAndDrop />
