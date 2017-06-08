@@ -9,7 +9,7 @@
   "scripts": {
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
     "dev": "webpack-dev-server",
-    "build": "webpack",
+    "build": "webpack --config webpack.production.config.js",
     "start": "npm run build & nw ./build"
   },
   "repository": {
@@ -37,8 +37,10 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "brace": "^0.10.0",
+    "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.1",
     "eventemitter3": "^2.0.3",
+    "html-webpack-plugin": "^2.28.0",
     "less": "^2.7.2",
     "less-loader": "^4.0.3",
     "mocha": "^3.4.1",

@@ -1,5 +1,6 @@
 var path = require('path');
 var webpack = require('webpack');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -18,7 +19,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {
-      platform: path.resolve(__dirname, 'src/platform/web/')
+      platform: path.resolve(__dirname, 'src/platform/nw/')
     }
   },
   module: {
@@ -33,17 +34,11 @@ module.exports = {
       }
     ]
   },
-  devtool: 'inline-source-map',
-  devServer: {
-    hot: true,
-    contentBase: path.resolve(__dirname, 'build'),
-    publicPath: '/',
-    port: 8080
-  },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.NamedModulesPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
+    new CopyWebpackPlugin([
+      { from: 'resources/nw/package.json' }
+    ]),
     new HtmlWebpackPlugin({
       title: 'APIB Editor'
     })
