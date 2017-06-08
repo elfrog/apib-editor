@@ -1,24 +1,14 @@
 import ApibParser from '../../parser/apib-parser';
 
-export default function loadFromFile(file) {
+export default async function loadFromFile(fileInfo) {
   let parser = new ApibParser();
-  let filename = file.name;
+  let filename = fileInfo.name;
+  let rootNode = await parser.parse(fileInfo.content);
 
-  return new Promise((resolve, reject) => {
-    let reader = new FileReader();
-    reader.onload = e => {
-      parser.parse(e.target.result).then(root => {
-        root.name = filename;
+  rootNode.name = filename;
 
-        resolve({
-          rootNode: root,
-          activeNodeId: root.id
-        });
-      }).catch(reject);
-    };
-    reader.onerror = e => {
-      reject(e);
-    };
-    reader.readAsText(file);
-  });
+  return {
+    rootNode, 
+    activeNodeId: rootNode.id
+  };
 }

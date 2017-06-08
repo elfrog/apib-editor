@@ -1,21 +1,10 @@
+import AppService from 'platform/app-service';
 
 export default function saveFile() {
-  return new Promise((resolve, reject) => {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.setAttribute('nwsaveas', 'true');
-    input.onchange = e => {
-      let file = e.target.files[0];
+  let rootNode = this.state.rootNode;
 
-      if (file) {
-        ;
-      } else {
-        reject(new Error('No file selected.'));
-      }
-    };
-    input.onerror = e => {
-      reject(e);
-    };
-    input.click();
+  AppService.saveFile({
+    name: rootNode.name,
+    content: rootNode.asString()
   });
 }

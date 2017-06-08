@@ -19,20 +19,6 @@ export let editorCommands = {
       action.do.saveFile();
     }
   },
-  downloadFile: {
-    label: 'Download File',
-    disabled: action => !action.state.rootNode,
-    onAction: action => {
-      let content = action.state.rootNode.asString();
-      let blob = new Blob([content], { type: 'text/plain' });
-      let url = window.URL.createObjectURL(blob);
-      let a = document.createElement('a');
-      a.href = url;
-      a.download = action.state.rootNode.name;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    }
-  },
   undo: {
     label: 'Undo',
     shortcut: 'Ctrl+Z',
