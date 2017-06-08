@@ -10,8 +10,7 @@ const EDITOR_MENU = [
       "newDocument",
       "openFile",
       null,
-      "saveFile",
-      "downloadFile"
+      "saveFile"
     ]
   },
   {
