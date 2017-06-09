@@ -55,8 +55,6 @@ export default class Action extends EventEmitter {
 
     this.state = Object.assign({}, initialState);
     this.do = {};
-    // Store runing actions in a stack so that only first async action can push its returned state. 
-    this.runningActions = [];
     this.history = new ActionHistory(state => {
       this.state = state;
       this.emit('statechange', this.state);
@@ -75,29 +73,23 @@ export default class Action extends EventEmitter {
     }
 
     this.do[name] = async (...args) => {
-      this.runningActions.push(name);
-
       return new Promise((resolve, reject) => {
         try {
           let result = thunk.apply(this, args);
 
           if (result instanceof Promise) {
             result.then(actionState => {
-              this.runningActions.pop();
               this.pushState(name, actionState);
               resolve(actionState);
             }).catch(e => {
-              this.runningActions.pop();
               this.emit('error', e);
               reject(e);
             });
           } else {
-            this.runningActions.pop();
             this.pushState(name, result);
             resolve(result);
           }
         } catch (e) {
-          this.runningActions.pop();
           this.emit('error', e);
           reject(e);
         }
@@ -106,10 +98,6 @@ export default class Action extends EventEmitter {
   }
 
   pushState(handlerName, state) {
-    if (this.runningActions.length > 0) {
-      return;
-    }
-
     if (!state || Object.keys(state).length === 0) {
       return;
     }
