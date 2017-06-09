@@ -34,9 +34,6 @@ export default class AppService {
           reject(new Error('No file selected.'));
         }
       };
-      input.onerror = e => {
-        reject(e);
-      };
       input.click();
     });
   }
