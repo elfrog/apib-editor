@@ -1,6 +1,4 @@
 import fs from 'fs';
-import http from 'http';
-import https from 'https';
 
 export default class AppService {
   static setup() {
@@ -15,19 +13,20 @@ export default class AppService {
         let file = e.target.files[0];
 
         if (file) {
-          loadTextFile(file).then(content => {
-            resolve({
-              name: file.name,
-              content,
-              path: file.name
-            });
+          fs.readFile(file.path, { encoding: 'utf8' }, (err, data) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve({
+                name: file.name,
+                content: data,
+                path: file.path
+              });
+            }
           });
         } else {
           reject(new Error('No file selected.'));
         }
-      };
-      input.onerror = e => {
-        reject(e);
       };
       input.click();
     });
@@ -50,33 +49,38 @@ export default class AppService {
           reject(new Error('No file selected.'));
         }
       };
-      input.onerror = e => {
-        reject(e);
-      };
       input.click();
     });
   }
 
   static async saveFile(fileInfo) {
-    return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      fs.writeFile(fileInfo.path, fileInfo.content, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   static async loadRemoteContent(remoteUrl) {
-    let req = remoteUrl.startsWith('https') ? https : http;
-
     return new Promise((resolve, reject) => {
-      req.get(remoteUrl, res => {
-        if (res.statusCode === 200) {
-          let body = '';
-          res.setEncoding('utf8');
-          res.on('data', data => body += data);
-          res.on('end', () => {
-            resolve(body);
-          });
+      let xhr = new XMLHttpRequest();
+      xhr.open('get', remoteUrl, true);
+      xhr.responseType = 'text';
+      xhr.onload = e => {
+        if (xhr.status == 200) {
+          let content = xhr.response;
+
+          resolve(content);
         } else {
-          reject(new Error('Request failed (Status ' + res.statusCode + ')'));
+          reject(new Error('Couldn\'t load remote content: ' + remoteUrl));
         }
-      });
+      };
+      xhr.onerror = e => reject(e);
+      xhr.send();
     });
   }
 }
