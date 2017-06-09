@@ -3,5 +3,12 @@
   "main": "index.html",
   "webkit": {
     "plugin": true
+  },
+  "window": {
+    "min_width": 400,
+    "min_height": 320,
+    "width": 1024,
+    "height": 768,
+    "position": "center"
   }
 }
