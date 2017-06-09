@@ -41,8 +41,11 @@ export default class AppService {
     });
   }
 
-  static async openSaveAsDialog(defaultFileName, defaultPath) {
-    ;
+  static async openSaveAsDialog(defaultFileName) {
+    return Promise.resolve({
+      name: defaultFileName,
+      path: defaultFileName
+    });
   }
 
   static async saveFile(fileInfo) {
