@@ -1,21 +1,16 @@
 var path = require('path');
 var webpack = require('webpack');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: [
-    'babel-polyfill',
     './src/index.jsx'
   ],
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js'
   },
-  externals: {
-    nw: 'nw',
-    fs: 'fs'
-  },
+  target: 'node-webkit',
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {
@@ -37,10 +32,8 @@ module.exports = {
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
     new CopyWebpackPlugin([
-      { from: 'resources/nw/package.json' }
-    ]),
-    new HtmlWebpackPlugin({
-      title: 'APIB Editor'
-    })
+      { from: 'resources/nw/package.json' },
+      { from: 'resources/nw/index.html' },
+    ])
   ]
 };

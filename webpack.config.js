@@ -1,6 +1,6 @@
 var path = require('path');
 var webpack = require('webpack');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: [
@@ -10,10 +10,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js'
-  },
-  externals: {
-    nw: 'nw',
-    fs: 'fs'
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -44,8 +40,8 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
-    new HtmlWebpackPlugin({
-      title: 'APIB Editor'
-    })
+    new CopyWebpackPlugin([
+      { from: 'resources/web/index.html' }
+    ])
   ]
 };
