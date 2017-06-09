@@ -15,9 +15,9 @@ import StartPage from './start-page';
 import EditorSettingsView from './editor-settings-view';
 
 import StorageService from 'platform/storage-service';
+import { EDITOR_MENU } from 'platform/editor-menu';
 
-import { editorCommands } from './editor-commands';
-import { getMenuItems } from './editor-menu';
+import { editorCommands, getMenuItems } from './editor-commands';
 import { getShortcutString } from '../common/key-utils';
 
 import SolarizedDarkTheme from '../styles/themes/solarized-dark.less';
@@ -27,6 +27,7 @@ import SolarizedLightTheme from '../styles/themes/solarized-light.less';
 StorageService.setValues({
   'editor.saved.data': '',
   'editor.saved.name': '',
+  'editor.saved.path': '',
   'editor.ui.nodeListPanelSize': 300,
   'editor.ui.nodePropertyViewPanelSize': 300,
   'editor.settings': {
@@ -42,7 +43,7 @@ export default class Editor extends React.Component {
     super(props);
 
     this.action = props.action;
-    this.menuItems = getMenuItems(this.action);
+    this.menuItems = getMenuItems(EDITOR_MENU, this.action);
 
     this.state = {
       settings: StorageService.get('editor.settings'),
