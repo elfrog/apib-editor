@@ -7,20 +7,23 @@ export default async function saveFile() {
   let path = await StorageService.get('editor.saved.path');
 
   if (!path) {
-    let fileInfo = await AppService.openSaveAsDialog(rootNode.name);
+    AppService.openSaveAsDialog(rootNode.name).then(fileInfo => {
+      StorageService.setValues({
+        'editor.saved.name': fileInfo.name,
+        'editor.saved.path': fileInfo.path
+      });
 
-    name = fileInfo.name;
-    path = fileInfo.path;
-
-    await StorageService.setValues({
-      'editor.saved.name': name,
-      'editor.saved.path': path
+      AppService.saveFile({
+        name: fileInfo.name,
+        path: fileInfo.path,
+        content: rootNode.asString()
+      });
+    });
+  } else {
+    await AppService.saveFile({
+      name,
+      path,
+      content: rootNode.asString()
     });
   }
-
-  await AppService.saveFile({
-    name,
-    path,
-    content: rootNode.asString()
-  });
 }

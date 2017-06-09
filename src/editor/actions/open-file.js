@@ -1,6 +1,7 @@
 import AppService from 'platform/app-service';
 
-export default async function openFile() {
-  let fileInfo = await AppService.openFileDialog();
-  return await this.do.loadFromFile(fileInfo);
+export default function openFile() {
+  AppService.openFileDialog().then(fileInfo => {
+    this.do.loadFromFile(fileInfo);
+  });
 }
