@@ -1,13 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import App from './app';
+import AppService from 'platform/app-service';
 
-function setup() {
-  let container = document.createElement('div');
-  container.id = 'app';
-  document.body.appendChild(container);
-}
+import App from './app';
 
 function render() {
   ReactDOM.render(
@@ -16,5 +12,6 @@ function render() {
   );
 }
 
-setup();
+AppService.setup();
+
 render();
