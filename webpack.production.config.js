@@ -4,6 +4,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: [
+    'babel-polyfill',
     './src/index.jsx'
   ],
   output: {
@@ -33,7 +34,7 @@ module.exports = {
     new webpack.NoEmitOnErrorsPlugin(),
     new CopyWebpackPlugin([
       { from: 'resources/nw/package.json' },
-      { from: 'resources/nw/index.html' },
+      { from: 'resources/nw/index.html' }
     ])
   ]
 };

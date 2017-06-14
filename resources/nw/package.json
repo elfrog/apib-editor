@@ -1,9 +1,11 @@
 {
   "name": "apib-editor",
+  "version": "1.0.0",
   "main": "index.html",
   "webkit": {
     "plugin": true
   },
+  "chromium-args": "--mixed-context",
   "window": {
     "min_width": 400,
     "min_height": 320,

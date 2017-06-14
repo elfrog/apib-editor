@@ -3,15 +3,6 @@
   <head>
     <meta charset="UTF-8">
     <title>APIB Editor</title>
-
-    <script type="text/javascript">
-      // To solve 'regeneratorRuntime is not defined' problem,
-      // copy some variables from NodeJS context to Window context.
-      // @see https://groups.google.com/forum/#!topic/nwjs-general/dAh9-x5hpvs
-      window.require('babel-polyfill'); // babel-polyfill here, not in webpack config
-      window.__dirname = global.__dirname;
-      window.regeneratorRuntime = global.regeneratorRuntime;
-    </script>
   </head>
   <body>
     <div id="app"></div>
