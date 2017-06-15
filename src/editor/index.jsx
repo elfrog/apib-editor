@@ -14,6 +14,7 @@ import NodeEditor from './node-editor';
 import StartPage from './start-page';
 import EditorSettingsView from './editor-settings-view';
 
+import AppService from 'platform/app-service';
 import StorageService from 'platform/storage-service';
 import { EDITOR_MENU } from 'platform/editor-menu';
 
@@ -52,7 +53,7 @@ export default class Editor extends React.Component {
   }
 
   componentDidMount() {
-    window.addEventListener('beforeunload', this.storeEditorState);
+    AppService.addEventListener('beforeunload', this.onClose);
     document.addEventListener('keydown', this.onKeyDown);
 
     StorageService.load().then(() => {
@@ -69,21 +70,8 @@ export default class Editor extends React.Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('beforeunload', this.storeEditorState);
+    AppService.removeEventListener('beforeunload', this.onClose);
     document.removeEventListener('keydown', this.onKeyDown);
-  }
-
-  storeEditorState = () => {
-    let rootNode = this.action.state.rootNode;
-
-    if (rootNode) {
-      let data = rootNode.asString();
-
-      StorageService.set('editor.saved.data', data);
-      StorageService.set('editor.saved.name', rootNode.name);
-    }
-
-    StorageService.save();
   }
 
   changeTheme(themeName) {
@@ -94,6 +82,22 @@ export default class Editor extends React.Component {
       SolarizedDarkTheme.unuse();
       SolarizedLightTheme.use();
     }
+  }
+
+  onClose = async (e) => {
+    e.preventDefault();
+
+    let rootNode = this.action.state.rootNode;
+
+    if (rootNode) {
+      let data = rootNode.asString();
+
+      StorageService.set('editor.saved.data', data);
+      StorageService.set('editor.saved.name', rootNode.name);
+    }
+
+    await StorageService.save();
+    AppService.close();
   }
 
   onSettingsChange = settings => {

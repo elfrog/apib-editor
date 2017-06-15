@@ -1,8 +1,39 @@
 import fs from 'fs';
+import EventEmitter from 'eventemitter3';
 
 export default class AppService {
+  static emitter = new EventEmitter();
+  static closing = false;
+
   static setup() {
-    ;
+    nw.Window.get().on('close', function () {
+      let defaultPrevented = false;
+
+      this.hide();
+
+      AppService.closing = true;
+      AppService.emitter.emit('beforeunload', {
+        preventDefault: () => {
+          defaultPrevented = true;
+        }
+      });
+
+      if (!defaultPrevented) {
+        AppService.close();
+      }
+    });
+  }
+
+  static addEventListener(eventName, thunk) {
+    AppService.emitter.on(eventName, thunk);
+  }
+
+  static removeEventListener(eventName, thunk) {
+    AppService.emitter.off(eventName, thunk);
+  }
+
+  static close() {
+    nw.Window.get().close(AppService.closing);
   }
 
   static async openFileDialog() {

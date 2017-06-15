@@ -1,3 +1,4 @@
+import EventEmitter from 'eventemitter3';
 
 function loadTextFile(file) {
   return new Promise((resolve, reject) => {
@@ -11,7 +12,25 @@ function loadTextFile(file) {
 }
 
 export default class AppService {
+  static emitter = new EventEmitter();
+
   static setup() {
+    window.addEventListener('beforeunload', e => {
+      AppService.emitter.emit('beforeunload', {
+        preventDefault: () => {}
+      });
+    });
+  }
+
+  static addEventListener(eventName, thunk) {
+    AppService.emitter.on(eventName, thunk);
+  }
+
+  static removeEventListener(eventName, thunk) {
+    AppService.emitter.off(eventName, thunk);
+  }
+
+  static close() {
     ;
   }
 
