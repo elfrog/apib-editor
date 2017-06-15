@@ -1,4 +1,5 @@
 
+import closeProgram from './close-program';
 import openNewDocument from './open-new-document';
 import loadFromFile from './load-from-file';
 import loadFromRepository from './load-from-repository';
@@ -14,6 +15,7 @@ import removeChildNode from './remove-child-node';
 import changeNodeIndex from './change-node-index';
 
 export let actions = [
+  closeProgram,
   openNewDocument,
   loadFromFile,
   loadFromRepository,
