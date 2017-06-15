@@ -1,5 +1,7 @@
+import fs from 'fs';
 
 export default class StorageService {
+  static STORAGE_PATH = 'settings.json';
   static values = {};
 
   static setValues(values) {
@@ -19,16 +21,30 @@ export default class StorageService {
   }
 
   static async save() {
-    let serialized = JSON.stringify(StorageService.values);
-    localStorage.setItem('apibStorage', serialized);
+    let data = JSON.stringify(StorageService.values, null, 2);
+
+    return new Promise((resolve, reject) => {
+      fs.writeFile(StorageService.STORAGE_PATH, data, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   static async load() {
-    let serialized = localStorage.getItem('apibStorage');
-
-    if (serialized) {
-      let values = JSON.parse(serialized);
-      StorageService.setValues(values);
-    }
+    return new Promise((resolve, reject) => {
+      fs.readFile(StorageService.STORAGE_PATH, { encoding: 'utf8' }, (err, data) => {
+        if (err) {
+          resolve();
+        } else {
+          let values = JSON.parse(data);
+          StorageService.setValues(values);
+          resolve();
+        }
+      });
+    });
   }
 }
