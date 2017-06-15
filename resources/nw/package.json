@@ -7,8 +7,6 @@
   },
   "chromium-args": "--mixed-context",
   "window": {
-    "min_width": 400,
-    "min_height": 320,
     "width": 1024,
     "height": 768,
     "position": "center"
