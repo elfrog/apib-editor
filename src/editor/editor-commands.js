@@ -27,6 +27,12 @@ export let editorCommands = {
       action.do.saveAsFile();
     }
   },
+  close: {
+    label: 'Close',
+    onAction: action => {
+      action.do.closeProgram();
+    }
+  },
   undo: {
     label: 'Undo',
     shortcut: 'Ctrl+Z',

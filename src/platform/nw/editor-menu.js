@@ -7,7 +7,9 @@ export const EDITOR_MENU = [
       "openFile",
       null,
       "saveFile",
-      "saveAsFile"
+      "saveAsFile",
+      null,
+      "close"
     ]
   },
   {
