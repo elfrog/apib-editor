@@ -33,10 +33,10 @@ export default class Select extends React.Component {
   }
 
   render() {
-    let optionElements = this.props.options ? this.props.options.map(option => 
+    let optionElements = this.props.options ? this.props.options.map((option, idx) => 
       typeof option === 'string' ?
-        <option key={'option-' + option} value={option}>{option}</option> :
-        <option key={'option-' + option.value} value={option.value}>{option.name}</option> 
+        <option key={'option-' + idx} value={option}>{option}</option> :
+        <option key={'option-' + idx} value={option.value}>{option.name}</option> 
     ) : [];
 
     return <div className='property-control select'>
