@@ -64,7 +64,7 @@ export default class ApibNode {
   }
 
   checkAcceptableChild(child) {
-    if (this.constructor.acceptableNodes.indexOf(child.constructor) < 0) {
+    if (!this.constructor.acceptableNodes.some(nodeClass => child instanceof nodeClass)) {
       throw new Error('The given node can\'t be a child.');
     }
   }
@@ -195,8 +195,13 @@ export default class ApibNode {
 
   asString(newLine = '\r\n') {
     let content = (this.parent ? this.header : '') + newLine + this.description;
-    let contentList = this.children.map(child => child.asString(newLine).trim());
 
-    return content.trim() + newLine + newLine + contentList.join(newLine + newLine) + newLine;
+    if (this.children.length > 0) {
+      let list = this.children.map(child => child.asString(newLine).trim());
+
+      return content.trim() + newLine + newLine + list.join(newLine + newLine) + newLine;
+    } else {
+      return content.trim() + newLine;
+    }
   }
 }
