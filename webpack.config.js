@@ -8,6 +8,7 @@ module.exports = {
   ],
   output: {
     path: path.resolve(__dirname, 'build'),
+    publicPath: '/build/',
     filename: 'bundle.js'
   },
   resolve: {
@@ -31,7 +32,6 @@ module.exports = {
   devtool: 'inline-source-map',
   devServer: {
     hot: true,
-    publicPath: '/',
     port: 8080
   },
   plugins: [
