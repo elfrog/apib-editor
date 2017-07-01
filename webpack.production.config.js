@@ -1,6 +1,5 @@
 var path = require('path');
 var webpack = require('webpack');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: [
@@ -30,9 +29,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin(),
-    new CopyWebpackPlugin([
-      { from: 'resources/web/index.html' }
-    ])
+    new webpack.NoEmitOnErrorsPlugin()
   ]
 };

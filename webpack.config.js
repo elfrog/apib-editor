@@ -1,6 +1,5 @@
 var path = require('path');
 var webpack = require('webpack');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: [
@@ -32,16 +31,12 @@ module.exports = {
   devtool: 'inline-source-map',
   devServer: {
     hot: true,
-    contentBase: path.resolve(__dirname, 'build'),
     publicPath: '/',
     port: 8080
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
-    new CopyWebpackPlugin([
-      { from: 'resources/web/index.html' }
-    ])
+    new webpack.NoEmitOnErrorsPlugin()
   ]
 };
