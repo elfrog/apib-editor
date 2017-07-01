@@ -1,3 +1,4 @@
+import ApibNode from './apib-node';
 import PackageNode from './package-node';
 import ResourceGroupNode from './resource-group-node';
 import ModelGroupNode from './model-group-node';
@@ -19,12 +20,9 @@ export default class ApibParser {
 
   async parse(markdownString) {
     let lines = markdownString.split(/\r?\n/);
-    let root = new PackageNode();
-
-    root.name = 'Document';
-
-    let parsingNote = false;
+    let root = new ApibNode();
     let node = root;
+    let parsingNote = false;
 
     for (let line of lines) {
       if (!parsingNote && line[0] === '#') {
@@ -33,7 +31,10 @@ export default class ApibParser {
         let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(line));
         node = new nodeClass();
         node.header = line;
-        parent.addChild(node);
+        node.depth = depth;
+        node.parent = parent;
+        parent.checkAcceptableChild(node);
+        parent.children.push(node);
       } else if (line.trim().indexOf(':::') === 0) {
         parsingNote = !parsingNote;
         node.lines.push(line);
@@ -41,6 +42,9 @@ export default class ApibParser {
         node.lines.push(line);
       }
     }
+
+    // Normalize the depth.
+    root.setDepth(0);
 
     return root;
   }
