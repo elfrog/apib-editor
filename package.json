@@ -10,7 +10,7 @@
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
     "dev": "webpack-dev-server",
     "build": "webpack --config webpack.production.config.js",
-    "start": "npm run build & nw ./build"
+    "start": "npm run build"
   },
   "repository": {
     "type": "git",

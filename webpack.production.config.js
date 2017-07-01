@@ -11,11 +11,10 @@ module.exports = {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js'
   },
-  target: 'node-webkit',
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {
-      platform: path.resolve(__dirname, 'src/platform/nw/')
+      platform: path.resolve(__dirname, 'src/platform/web/')
     }
   },
   module: {
@@ -33,8 +32,7 @@ module.exports = {
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
     new CopyWebpackPlugin([
-      { from: 'resources/nw/package.json' },
-      { from: 'resources/nw/index.html' }
+      { from: 'resources/web/index.html' }
     ])
   ]
 };
