@@ -4,6 +4,7 @@ export const SUPPORTED_ACTION_METHODS = ['GET', 'PUT', 'POST', 'DELETE', 'UPDATE
 
 export default class ActionNode extends ApibNode {
   static headerRegex = /^#* (.+) \[([A-Z]+) ?(\S*)\]$/;
+  static acceptableNodes = [];
 
   constructor() {
     super();

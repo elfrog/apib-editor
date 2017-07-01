@@ -2,6 +2,7 @@ import ApibNode from './apib-node';
 
 export default class ModelNode extends ApibNode {
   static headerRegex = /^#* (.+) \((\S+)\)$/;
+  static acceptableNodes = [];
 
   constructor() {
     super();
