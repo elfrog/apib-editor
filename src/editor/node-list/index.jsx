@@ -30,7 +30,9 @@ export default class NodeList extends React.Component {
     onSelect: PropTypes.func,
     onAddNode: PropTypes.func,
     onRemoveNode: PropTypes.func,
-    onChangeNodeIndex: PropTypes.func
+    onChangeNodeIndex: PropTypes.func,
+    onCopyNode: PropTypes.func,
+    onPasteNode: PropTypes.func
   };
 
   constructor(props) {
@@ -83,6 +85,8 @@ export default class NodeList extends React.Component {
         onAddNode={this.props.onAddNode}
         onRemoveNode={this.props.onRemoveNode}
         onChangeNodeIndex={this.props.onChangeNodeIndex}
+        onCopyNode={this.props.onCopyNode}
+        onPasteNode={this.props.onPasteNode}
       />
     );
 

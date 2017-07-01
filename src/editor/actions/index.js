@@ -13,6 +13,8 @@ import changeNodeProperty from './change-node-property';
 import addChildNode from './add-child-node';
 import removeChildNode from './remove-child-node';
 import changeNodeIndex from './change-node-index';
+import copyNode from './copy-node';
+import pasteNode from './paste-node';
 
 export let actions = [
   closeProgram,
@@ -28,7 +30,9 @@ export let actions = [
   changeNodeProperty,
   addChildNode,
   removeChildNode,
-  changeNodeIndex
+  changeNodeIndex,
+  copyNode,
+  pasteNode
 ];
 
 export let initialState = {

@@ -156,6 +156,8 @@ export default class Editor extends React.Component {
                   onAddNode={this.action.do.addChildNode}
                   onRemoveNode={this.action.do.removeChildNode}
                   onChangeNodeIndex={this.action.do.changeNodeIndex}
+                  onCopyNode={this.action.do.copyNode}
+                  onPasteNode={this.action.do.pasteNode}
                 />
                 <NodeEditor
                   rootNode={this.props.rootNode}

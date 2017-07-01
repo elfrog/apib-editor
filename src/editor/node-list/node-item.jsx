@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import ContextMenu from '../components/context-menu';
 import DragAndDrop from '../components/drag-and-drop';
 
@@ -8,6 +9,8 @@ import {
   FaArrowCircleDown, FaPlusCircle, FaTimesCircle, FaArrowCircleUp,
   FaEllipsisH, FaTrash, FaPlus
 } from 'react-icons/fa';
+
+import StorageService from 'platform/storage-service';
 
 import PackageNode from '../../parser/package-node';
 import ResourceGroupNode from '../../parser/resource-group-node';
@@ -23,7 +26,9 @@ export default class NodeItem extends React.Component {
     onClick: PropTypes.func,
     onAddNode: PropTypes.func,
     onRemoveNode: PropTypes.func,
-    onChangeNodeIndex: PropTypes.func
+    onChangeNodeIndex: PropTypes.func,
+    onCopyNode: PropTypes.func,
+    onPasteNode: PropTypes.func
   };
 
   constructor(props) {
@@ -90,6 +95,34 @@ export default class NodeItem extends React.Component {
       if (items.length > 0) {
         items.push({ separator: true });
       }
+
+      items.push({
+        label: 'Copy Node',
+        onClick: () => {
+          if (this.props.onCopyNode) {
+            this.props.onCopyNode(node);
+          }
+        }
+      });
+
+      if (!(node instanceof ActionNode) && !(node instanceof ModelNode)) {
+        let copyData = StorageService.get('editor.copy.data');
+
+        if (copyData) {
+          let copyName = StorageService.get('editor.copy.name');
+
+          items.push({
+            label: <span>Paste <small>&lt;{copyName}&gt;</small></span>,
+            onClick: () => {
+              if (this.props.onPasteNode) {
+                this.props.onPasteNode(node);
+              }
+            }
+          });
+        }
+      }
+
+      items.push({ separator: true });
 
       items.push({
         label: 'Remove',
