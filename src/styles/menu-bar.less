@@ -2,13 +2,17 @@
 .menu-bar {
   width: 100%;
   overflow: hidden;
+  height: @unit-height;
+  line-height: @unit-height;
+  font-size: 1.2em;
+  background-color: @body-text-color;
 
   .menu-bar-separator {
     float: left;
     width: 1px;
-    height: @unit-height - @unit-margin;
-    margin: (@unit-margin / 2) @unit-margin;
-    border-left: 1px solid @body-highlight-color;
+    height: @unit-height;
+    margin: 0 (@unit-margin / 4);
+    border-left: 1px solid @secondary-text-color;
   }
 
   .menu-bar-button {
@@ -16,18 +20,23 @@
 
     button {
       height: @unit-height;
-      line-height: @unit-height;
       margin: 0;
       padding: 0 @unit-margin;
       border: 0;
       border-radius: 0;
-      background-color: @body-color;
-      color: @body-text-color;
-      cursor: pointer;
+      background-color: transparent;
+      color: @body-color;
+      font-size: 1em;
+      transition: background-color 300ms;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: @body-highlight-color;
-        color: @primary-text-color;
+        color: @body-text-color;
+        cursor: pointer;
+      }
+
+      &:disabled {
+        color: @secondary-text-color;
       }
     }
   }

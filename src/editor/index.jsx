@@ -44,7 +44,6 @@ export default class Editor extends React.Component {
     super(props);
 
     this.action = props.action;
-    this.menuItems = getMenuItems(EDITOR_MENU, this.action);
 
     this.state = {
       settings: StorageService.get('editor.settings'),
@@ -133,12 +132,13 @@ export default class Editor extends React.Component {
 
   render() {
     let activeNode = this.props.rootNode ? this.props.rootNode.findNodeById(this.props.activeNodeId) : null;
+    let menuItems = getMenuItems(EDITOR_MENU, this.action);
 
     return <div className='apib-editor'>
       {this.state.loading === false && 
         <div>
           <div className='apib-editor-menu'>
-            <MenuBar items={this.menuItems} />
+            <MenuBar items={menuItems} />
           </div>
 
           <div className='apib-editor-content'>      

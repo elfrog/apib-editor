@@ -63,6 +63,23 @@ export function getMenuItems(menuData, action) {
   const commands = editorCommands;
 
   return menuData.map(menu => {
+    if (menu === null) {
+      return { separator: true };
+    }
+
+    if (menu.command) {
+      let command = commands[menu.command];
+
+      return {
+        label: menu.label,
+        disabled: command.disabled ? command.disabled(action) : false,
+        onClick: e => {
+          command.onAction(action);
+          return;
+        }
+      };
+    }
+
     return {
       label: menu.label,
       onClick: e => {
