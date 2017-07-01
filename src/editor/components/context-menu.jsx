@@ -16,7 +16,7 @@ class MenuItemSeparator extends React.Component {
 
 class MenuItem extends React.Component {
   static propTypes = {
-    label: PropTypes.string.isRequired,
+    label: PropTypes.any.isRequired,
     shortcut: PropTypes.string,
     icon: PropTypes.element,
     disabled: PropTypes.bool,
