@@ -29,6 +29,7 @@ StorageService.setValues({
   'editor.saved.data': '',
   'editor.saved.name': '',
   'editor.saved.path': '',
+  'editor.saved.activeNodeId': null,
   'editor.ui.nodeListPanelSize': 300,
   'editor.ui.nodePropertyViewPanelSize': 300,
   'editor.settings': {
@@ -93,6 +94,7 @@ export default class Editor extends React.Component {
 
       StorageService.set('editor.saved.data', data);
       StorageService.set('editor.saved.name', rootNode.name);
+      StorageService.set('editor.saved.activeNodeId', this.action.state.activeNodeId);
     }
 
     await StorageService.save();

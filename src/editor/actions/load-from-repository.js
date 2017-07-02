@@ -9,13 +9,14 @@ export default async function loadFromRepository() {
   }
 
   let savedName = StorageService.get('editor.saved.name');
+  let activeNodeId = StorageService.get('editor.saved.activeNodeId');
   let parser = new ApibParser();
-  let root = await parser.parse(savedData);
+  let rootNode = await parser.parse(savedData);
   
-  root.name = savedName;
+  rootNode.name = savedName;
 
   return {
-    rootNode: root,
-    activeNodeId: root.id
+    rootNode,
+    activeNodeId
   };
 }
