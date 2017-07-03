@@ -1,8 +1,6 @@
 
 const HASH_HEADERS = ['', '#', '##', '###', '####', '#####', '######', '######', '########', '#########'];
 
-let nodeIdCounter = 1;
-
 /**
  * Node for Api-blueprint parsing tree.
  * ApibNode is just an abstract node.
@@ -23,7 +21,7 @@ export default class ApibNode {
   static acceptableNodes = [ApibNode];
 
   constructor() {
-    this.id = nodeIdCounter++;
+    this.id = 1 + Math.floor(Math.random() * 0x100000);
     this.parent = null;
     this.children = [];
     this.depth = 0;
@@ -203,5 +201,14 @@ export default class ApibNode {
     } else {
       return content.trim() + newLine;
     }
+  }
+
+  asJson() {
+    return {
+      id: this.id,
+      header: this.header,
+      description: this.description,
+      children: this.children.map(child => child.asJson())
+    };
   }
 }
