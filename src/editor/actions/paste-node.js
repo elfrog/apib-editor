@@ -8,11 +8,9 @@ export default async function pasteNode(node) {
     let parser = new ApibParser();
     let rootNode = this.state.rootNode.clone();
     let pasteNode = rootNode.findNodeById(node.id);
-    let copyNode = await parser.parse(data);
+    let copyNode = parser.createNodeFromJson(data, false);
 
-    for (let child of copyNode.children) {
-      pasteNode.addChild(child);
-    }
+    pasteNode.addChild(copyNode);
 
     return {
       rootNode

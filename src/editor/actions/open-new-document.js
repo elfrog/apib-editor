@@ -18,9 +18,9 @@ This is an example action.
 
 `;
 
-export default async function openNewDocument() {
+export default function openNewDocument() {
   let parser = new ApibParser();
-  let root = await parser.parse(NEW_DOCUMENT_TEMPLATE);
+  let root = parser.parse(NEW_DOCUMENT_TEMPLATE);
 
   root.name = 'my-project.apib';
 

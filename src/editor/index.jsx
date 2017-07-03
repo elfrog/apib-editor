@@ -90,7 +90,7 @@ export default class Editor extends React.Component {
     let rootNode = this.action.state.rootNode;
 
     if (rootNode) {
-      let data = rootNode.asString();
+      let data = rootNode.asJson();
 
       StorageService.set('editor.saved.data', data);
       StorageService.set('editor.saved.name', rootNode.name);
