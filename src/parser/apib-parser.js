@@ -7,18 +7,16 @@ import ModelNode from './model-node';
 import ActionNode from './action-node';
 
 export default class ApibParser {
-  constructor() {
-    this.nodeClasses = [
-      ActionNode,
-      ModelNode,
-      ResourceNode,
-      ModelGroupNode,
-      ResourceGroupNode,
-      PackageNode
-    ];
-  }
+  static nodeClasses = [
+    ActionNode,
+    ModelNode,
+    ResourceNode,
+    ModelGroupNode,
+    ResourceGroupNode,
+    PackageNode
+  ];
 
-  async parse(markdownString) {
+  parse(markdownString) {
     let lines = markdownString.split(/\r?\n/);
     let root = new ApibNode();
     let node = root;
@@ -28,7 +26,7 @@ export default class ApibParser {
       if (!parsingNote && line[0] === '#') {
         let depth = line.indexOf(' ');
         let parent = node.findRecentParent(depth);
-        let nodeClass = this.nodeClasses.find(p => p.canAcceptHeader(line));
+        let nodeClass = ApibParser.nodeClasses.find(p => p.canAcceptHeader(line));
         node = new nodeClass();
         node.header = line;
         node.depth = depth;
@@ -47,5 +45,25 @@ export default class ApibParser {
     root.setDepth(0);
 
     return root;
+  }
+
+  createNodeFromJson(data, preserveId = true) {
+    let nodeClass = ApibParser.nodeClasses.find(p => p.canAcceptHeader(data.header));
+    let node = new nodeClass();
+
+    if (preserveId) {    
+      node.id = data.id;
+    }
+
+    node.depth = data.header.indexOf(' ');
+    node.header = data.header;
+    node.description = data.description;
+    node.children = data.children.map(child => {
+      let childNode = this.createNodeFromJson(child, preserveId);
+      childNode.parent = node;
+      return childNode;
+    });
+
+    return node;
   }
 }

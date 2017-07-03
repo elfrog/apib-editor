@@ -54,7 +54,7 @@ It should throw an error.
 describe('ApibParser', () => {
   it('should parse correctly', async () => {
     let parser = new ApibParser();
-    let root = await parser.parse(TEST_TEXT);
+    let root = parser.parse(TEST_TEXT);
 
     assert.equal(root.children.length, 3);
     assert.ok(root.children[1] instanceof ResourceGroupNode);
@@ -66,23 +66,35 @@ describe('ApibParser', () => {
     assert.equal(root.children[2].children[0].url, '/resource2');
   });
 
-  it('should throw an error when parsing without resource definition', (done) => {
+  it('should convert JSON to Node object and vice versa', () => {
+    let parser = new ApibParser();
+    let root = parser.parse(TEST_TEXT);
+    let jsonData = root.asJson();
+
+    assert.equal(root.header, jsonData.header);
+    assert.equal(root.children.length, jsonData.children.length);
+
+    let converted = parser.createNodeFromJson(jsonData);
+
+    assert.equal(converted.header, jsonData.header);
+    assert.equal(converted.children.length, jsonData.children.length);
+    assert.equal(converted, converted.children[0].parent);
+    assert.ok(converted.children[1] instanceof ResourceGroupNode);
+  });
+
+  it('should throw an error when parsing without resource definition', () => {
     let parser = new ApibParser();
 
-    parser.parse(WITHOUT_RESOURCE_DEFINITION_TEXT).then(() => {
-      done('error');
-    }).catch(() => {
-      done();
+    assert.throws(() => {
+      parser.parse(WITHOUT_RESOURCE_DEFINITION_TEXT);
     });
   });
 
-  it('should throw an error when parsing unsupported method', (done) => {
+  it('should throw an error when parsing unsupported method', () => {
     let parser = new ApibParser();
 
-    parser.parse(UNSUPPORTED_METHOD_TEXT).then(() => {
-      done('error');
-    }).catch(() => {
-      done();
+    assert.throws(() => {
+      parser.parse(UNSUPPORTED_METHOD_TEXT);
     });
   });
 });
