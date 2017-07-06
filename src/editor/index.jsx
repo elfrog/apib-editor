@@ -66,12 +66,28 @@ export default class Editor extends React.Component {
 
       this.action.do.loadFromRepository();
       this.changeTheme(settings.theme);
+      this.changeFont(settings.font, settings.fontSize);
     });
   }
 
   componentWillUnmount() {
     AppService.removeEventListener('beforeunload', this.onClose);
     document.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  changeFont(fontFamily, fontSize) {
+    let sheet = document.getElementById('fontStyle');
+
+    if (!sheet) {
+      sheet = document.createElement('style');
+      sheet.id = 'fontStyle';
+      document.body.appendChild(sheet);
+    }
+
+    sheet.innerHTML = `
+      html { font-family: ${fontFamily}; font-size: ${fontSize}px }
+      input, select, .control { font-family: ${fontFamily}; font-size: ${fontSize}px }
+    `;
   }
 
   changeTheme(themeName) {
@@ -104,6 +120,10 @@ export default class Editor extends React.Component {
   onSettingsChange = settings => {
     if (this.state.settings.theme !== settings.theme) {
       this.changeTheme(settings.theme);
+    }
+
+    if (this.state.settings.font !== settings.font || this.state.settings.fontSize !== settings.fontSize) {
+      this.changeFont(settings.font, settings.fontSize);
     }
 
     StorageService.set('editor.settings', settings);
