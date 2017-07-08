@@ -72,9 +72,14 @@ export default class NodeEditor extends React.Component {
               useSoftTabs={true}
               wrapEnabled={true}
               keyboardHandler={settings.vimMode ? 'vim' : ''}
-              editorProps={{$blockScrolling: Infinity}}
+              editorProps={{$blockScrolling: true}}
               value={source}
               onChange={this.onDescriptionChange}
+              onLoad={editor => {
+                // AceEditor can't calcaulte its size immediately in certain browsers.
+                // So recalculating size with delay is needed.
+                setTimeout(() => editor.resize(true), 100);
+              }}
             />
           </div>
         </div>
