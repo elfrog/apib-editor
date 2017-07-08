@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
 import NodeItem from './node-item';
@@ -48,6 +49,26 @@ export default class NodeList extends React.Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    this.focusOnActiveItem();
+  }
+
+  focusOnActiveItem() {
+    let item = this.refs.activeItem;
+
+    if (item) {
+      let domNode = ReactDOM.findDOMNode(item);
+
+      // scrollIntoViewIfNeeded is supported by Chrome, Opera and Safari.
+      if (domNode.scrollIntoViewIfNeeded) {
+        domNode.scrollIntoViewIfNeeded();
+      } else {
+        // TODO the polyfill of scrollIntoViewIfNeeded is needed for Firefox, IE and Edge.
+        // domNode.scrollIntoView();
+      }
+    }
+  }
+
   onFilterTextChanged = e => {
     if (!this.props.onFilter) {
       return;
@@ -79,6 +100,7 @@ export default class NodeList extends React.Component {
     let nodeItems = nodeList.map(node => 
       <NodeItem
         key={node.id}
+        ref={node === this.props.activeNode ? 'activeItem' : undefined}
         node={node}
         active={node === this.props.activeNode}
         onClick={e => this.onItemSelect(node)}
