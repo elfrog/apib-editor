@@ -1,5 +1,7 @@
 
 .modal {
+  @header-height: @unit-height * 1.2;
+
   position: fixed;
   top: 0;
   left:0;
@@ -42,7 +44,9 @@
   }
 
   .modal-header {
-    padding: @unit-margin;
+    height: @header-height;
+    line-height: @header-height;
+    padding: 0 @unit-margin;
     font-size: 1em;
     font-weight: bold;
   }
@@ -55,13 +59,17 @@
     display: block;
     position: absolute;
     right: 0;
+    width: @header-height;
+    height: @header-height;
+    line-height: @header-height;
     z-index: 100;
     border: 0;
     border-radius: 0;
-    padding: @unit-margin;
+    padding: 0;
     margin: 0;
     background-color: @body-color;
     color: @body-text-color;
+    font-size: 1em;
     cursor: pointer;
 
     &:hover {
