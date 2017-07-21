@@ -73,6 +73,7 @@ export default class NodeEditor extends React.Component {
               wrapEnabled={true}
               keyboardHandler={settings.vimMode ? 'vim' : ''}
               editorProps={{$blockScrolling: true}}
+              setOptions={{newLineMode: 'unix'}}
               value={source}
               onChange={this.onDescriptionChange}
               onLoad={editor => {
