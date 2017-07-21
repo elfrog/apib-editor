@@ -41,7 +41,7 @@ export default class ApibNode {
 
   get description() {
     if (this._description === null) {
-      this._description = this.lines.join('\r\n');
+      this._description = this.lines.join('\n');
     }
 
     return this._description;
@@ -191,7 +191,7 @@ export default class ApibNode {
     return node;
   }
 
-  asString(newLine = '\r\n') {
+  asString(newLine = '\n') {
     let content = (this.parent ? this.header : '') + newLine + this.description;
 
     if (this.children.length > 0) {
