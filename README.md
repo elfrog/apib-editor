@@ -30,7 +30,7 @@ It will build the source and put the final result to `build` directory.
 APIB Editor uses Webpack and webpack-dev-server. It makes the development quick and easy. Just type the command,
 
 ```
-> npm run dev
+> npm start 
 ```
 
 And you can go to `http://localhost:8080` on Chrome browser.
