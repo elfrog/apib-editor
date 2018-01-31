@@ -68,10 +68,18 @@ export default class AppService {
     let blob = new Blob([fileInfo.content], { type: 'text/plain' });
     let url = window.URL.createObjectURL(blob);
     let a = document.createElement('a');
+
+    document.body.appendChild(a);
+
     a.href = url;
     a.download = fileInfo.name;
+    a.target = '_blank';
+    a.type = 'text/plain';
     a.click();
+
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+
     return Promise.resolve();
   }
 
