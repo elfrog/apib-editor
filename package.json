@@ -8,9 +8,8 @@
   },
   "scripts": {
     "test": "mocha test/**/*.test.js --compilers js:babel-core/register --require babel-polyfill",
-    "dev": "webpack-dev-server",
     "build": "webpack --config webpack.production.config.js",
-    "start": "npm run build"
+    "start": "webpack-dev-server"
   },
   "repository": {
     "type": "git",
@@ -35,23 +34,23 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "brace": "^0.10.0",
     "css-loader": "^0.28.1",
-    "eventemitter3": "^2.0.3",
-    "less": "^2.7.2",
     "less-loader": "^4.0.3",
     "mocha": "^3.4.1",
-    "prop-types": "^15.5.10",
     "raw-loader": "^0.5.1",
-    "react": "^15.5.4",
-    "react-ace": "^4.3.0",
-    "react-dom": "^15.5.4",
-    "react-icons": "^2.2.5",
     "style-loader": "^0.17.0",
     "webpack": "^2.5.1",
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
-    "babel-polyfill": "^6.23.0"
+    "babel-polyfill": "^6.23.0",
+    "prop-types": "^15.5.10",
+    "react": "^15.5.4",
+    "react-ace": "^4.3.0",
+    "react-dom": "^15.5.4",
+    "react-icons": "^2.2.5",
+    "less": "^2.7.2",
+    "eventemitter3": "^2.0.3",
+    "brace": "^0.10.0"
   }
 }
