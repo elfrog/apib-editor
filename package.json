@@ -44,13 +44,13 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.23.0",
-    "prop-types": "^15.5.10",
+    "brace": "^0.10.0",
+    "eventemitter3": "^2.0.3",
+    "less": "^2.7.2",
+    "prop-types": "^15.7.2",
     "react": "^15.5.4",
     "react-ace": "^4.3.0",
     "react-dom": "^15.5.4",
-    "react-icons": "^2.2.5",
-    "less": "^2.7.2",
-    "eventemitter3": "^2.0.3",
-    "brace": "^0.10.0"
+    "react-icons": "^2.2.5"
   }
 }
