@@ -46,11 +46,13 @@
 }
 
 .apib-node-header-icon {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  top: -1px;
   float: left;
   width: @node-item-height;
+  height: @node-item-height;
   text-align: center;
 
   &.action-get { color: @blue; }
