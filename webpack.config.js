@@ -25,7 +25,11 @@ module.exports = {
       },
       {
         test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'less-loader']
+        use: [
+          { loader: 'style-loader', options: { injectType: 'lazyStyleTag' } },
+          'css-loader',
+          'less-loader'
+        ]
       }
     ]
   },
