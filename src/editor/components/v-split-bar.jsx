@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
 export default class VSplitBar extends React.Component {
-  static PropTypes = {
+  static propTypes = {
     left: PropTypes.number.isRequired,
     size: PropTypes.number,
     draggable: PropTypes.bool,
