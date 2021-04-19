@@ -1,6 +1,8 @@
 import ApibNode from './apib-node';
 
-export const SUPPORTED_ACTION_METHODS = ['GET', 'PUT', 'POST', 'DELETE', 'UPDATE'];
+export const SUPPORTED_ACTION_METHODS = [
+  'GET', 'PUT', 'POST', 'DELETE', 'UPDATE', 'PATCH', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE'
+];
 
 export default class ActionNode extends ApibNode {
   static headerRegex = /^#* (.+) \[([A-Z]+) ?(\S*)\]$/;

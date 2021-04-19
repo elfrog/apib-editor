@@ -9,7 +9,7 @@ import PackageNode from '../../parser/package-node';
 import ResourceGroupNode from '../../parser/resource-group-node';
 import ModelGroupNode from '../../parser/model-group-node';
 import ResourceNode from '../../parser/resource-node';
-import ActionNode from '../../parser/action-node';
+import ActionNode, { SUPPORTED_ACTION_METHODS } from '../../parser/action-node';
 import ModelNode from '../../parser/model-node';
 
 function getNodeTypeName(node) {
@@ -80,7 +80,7 @@ export default class NodePropertyView extends React.Component {
     return <Select
       label='Action'
       value={node.action}
-      options={['GET', 'PUT', 'POST', 'DELETE', 'UPDATE']}
+      options={SUPPORTED_ACTION_METHODS}
       onChange={value => this.onPropertyChange('action', value)}
     />;
   }
