@@ -37,7 +37,7 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         terserOptions: {
-          keep_fnames: true
+          mangle: false
         },
         extractComments: false
       })
