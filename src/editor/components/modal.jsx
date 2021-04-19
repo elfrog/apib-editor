@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { FaClose } from 'react-icons/fa';
+import { FaWindowClose } from 'react-icons/fa';
 
 export default class Modal extends React.Component {
   static propTypes = {
@@ -36,7 +36,7 @@ export default class Modal extends React.Component {
       <div className='modal-backdrop' onClick={this.onBackdropClick}>
         <div className='modal-container' onClick={this.onContainerClick}>
           {this.props.closable !== false &&
-            <button className='modal-close' onClick={this.onBackdropClick}><FaClose /></button>
+            <button className='modal-close' onClick={this.onBackdropClick}><FaWindowClose /></button>
           }
 
           {this.props.header &&

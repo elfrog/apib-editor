@@ -1,6 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
 
 const DRAG_START_THRESHOLD = 1;
 const INSPECT_DELAY = 1000;

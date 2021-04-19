@@ -1,7 +1,6 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import { FaClose } from 'react-icons/fa';
+import { FaWindowClose } from 'react-icons/fa';
 
 const TOAST_TIMEOUT = 3000;
 
@@ -74,7 +73,7 @@ export default class Toast extends React.Component {
       <div className={'toast-box ' + (this.state.toastType) + (this.state.open ? ' open' : '')}>
         <div className='toast-message'>{this.state.message}</div>
         <button className='toast-close-button' onClick={this.onCloseButtonClick}>
-          <FaClose />
+          <FaWindowClose />
         </button>
       </div>
     </div>;

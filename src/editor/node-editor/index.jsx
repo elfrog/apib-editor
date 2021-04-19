@@ -7,7 +7,6 @@ import VPanelSplitter from '../components/v-panel-splitter';
 import NodePropertyView from './node-property-view';
 import NodeHeader from './node-header';
 
-import brace from 'brace';
 import AceEditor from 'react-ace';
 
 import 'brace/mode/markdown';

@@ -2,9 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Modal from './components/modal';
-import Toast from './components/toast';
 
-import { FaFolderOpenO, FaFileO } from 'react-icons/fa';
+import { FaFolderOpen, FaFile } from 'react-icons/fa';
 
 const API_BLUEPRINT_EXAMPLES = [
   {
@@ -105,11 +104,11 @@ export default class StartPage extends React.Component {
         <div className='apib-start-box'>
           <h1>APIB Editor for API Blueprint</h1>
           <button className='apib-start-open-file' onClick={this.onOpenFile}>
-            <FaFolderOpenO />
+            <FaFolderOpen />
             <p>open your file</p>
           </button>
           <button className='apib-start-new-file' onClick={this.onNewFile}>
-            <FaFileO />
+            <FaFile />
             <p>or make new</p>
           </button>
         </div>

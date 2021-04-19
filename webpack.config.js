@@ -2,8 +2,8 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
+  mode: 'development',
   entry: [
-    'babel-polyfill',
     './src/index.jsx'
   ],
   output: {
@@ -25,7 +25,7 @@ module.exports = {
       },
       {
         test: /\.less$/,
-        use: ['style-loader/useable', 'css-loader', 'less-loader']
+        use: ['style-loader', 'css-loader', 'less-loader']
       }
     ]
   },
@@ -36,7 +36,6 @@ module.exports = {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NamedModulesPlugin(),
     new webpack.NoEmitOnErrorsPlugin()
   ]
 };

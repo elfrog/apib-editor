@@ -1,9 +1,10 @@
 var path = require('path');
 var webpack = require('webpack');
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
+  mode: 'production',
   entry: [
-    'babel-polyfill',
     './src/index.jsx'
   ],
   output: {
@@ -24,11 +25,19 @@ module.exports = {
       },
       {
         test: /\.less$/,
-        use: ['style-loader/useable', 'css-loader', 'less-loader']
+        use: ['style-loader', 'css-loader', 'less-loader']
       }
     ]
   },
   plugins: [
     new webpack.NoEmitOnErrorsPlugin()
-  ]
+  ],
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false
+      })
+    ]
+  }
 };
